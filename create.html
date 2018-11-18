@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>Manage session</title>
+</head>
+<body>
+    <div>
+        <div>
+            <p>
+                Название сессии:
+            </p>
+            <input type="text" id="name" />
+        </div>
+        <div>
+            <p>
+                Ограничение по времени (минуты):
+            </p>
+            <input type="number" id="time" min="5" max="180" value="30" />
+        </div>
+        <div>
+            <p></p>
+            <input type="button" id="create" value="Создать сессию" />
+        </div>
+        
+        <script src="static/create.js"></script>
+    </div>
+</body>
+</html>
