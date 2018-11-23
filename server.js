@@ -15,7 +15,7 @@ const { ID, getCookie, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
 const { getPath } = require("./Level");
 
-let gameSessions = new HashMap();
+let gameSessions = new Array();
 
 // 30 minutes
 const PREPARING_TIME_LIMIT = 30 * 60 * 1000;
@@ -71,7 +71,7 @@ app.post("/manage", function(request, response) {
     sessionId = request.cookies["manage"];
     if (sessionId) {
 
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             if (game.state == GameState.LOBBY) {
@@ -107,18 +107,18 @@ app.post("/manage/create", function(request, response) {
 
                 uniqueId = ID();
 
-            } while (gameSessions.get(uniqueId));
+            } while (gameSessions.find((gm) => gm.id == sessionId));
             game = new GameSession(uniqueId, name, lifetime);
             let cb = (id) => {
 
                 return () => {
 
-                    let gm = gameSessions.get(id);
+                    let gm = gameSessions.find((gm) => gm.id == sessionId);
                     if (gm) {
 
                         if (gm.state == GameState.LOBBY) {
 
-                            gameSessions.delete(id);
+                            gameSessions = gameSession.filter((gm) => gm.id != id);
 
                         }
 
@@ -129,7 +129,7 @@ app.post("/manage/create", function(request, response) {
             };
             setTimeout(cb(uniqueId), PREPARING_TIME_LIMIT);
             game.onEnd = endGame; // TODO
-            gameSessions.set(uniqueId, game);
+            gameSessions.push(game);
             responseJson.directLink =
                 request.protocol + "://" + request.get("host") + "/game?session=" + uniqueId;
             responseJson.players = [];
@@ -148,7 +148,7 @@ app.post("/manage/start", function(request, response) {
     sessionId = request.cookies["manage"];
     if (sessionId) {
 
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             game.readySteadyGo();
@@ -168,7 +168,7 @@ app.get("/game", function(request, response) {
     let sessionId = request.query.session;
     if (sessionId) {
 
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             response.sendFile(path.join(__dirname, "game.html"));
@@ -196,7 +196,7 @@ app.post("/game", function(request, response) {
     let game;
     if (playerId && sessionId) {
 
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             let player = game.getPlayerById(playerId);
@@ -224,7 +224,7 @@ app.post("/game", function(request, response) {
     if (responseJson.playerState == PlayerGameState.UNAUTH) {
 
         sessionId = request.body.sessionId;
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game && game.state != GameState.LOBBY) {
             
             responseJson.error = "Game already running. Can't join.";
@@ -243,7 +243,7 @@ app.post("/game/reg", function(request, response) {
 
         let username = request.body.username;
         let sessionId = request.body.sessionId;
-        let game = gameSessions.get(sessionId);
+        let game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             if (game.state == GameState.LOBBY) {
@@ -287,7 +287,7 @@ app.post("/game/dice", function(request, response) {
     let playerId = request.cookies["player"];
     if (playerId && sessionId) {
 
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             let player = game.getPlayerById(playerId);
@@ -324,7 +324,7 @@ io.of("manage")
 
         console.log(socket.id + " Manager connected!");
         sessionId = getCookie(socket.handshake.headers.cookie, "manage");
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             game.managSocket = socket;
@@ -349,7 +349,7 @@ io.of("game")
         console.log(socket.id + " Player connected!");
         sessionId = getCookie(socket.handshake.headers.cookie, "session");
         playerId = getCookie(socket.handshake.headers.cookie, "player");
-        game = gameSessions.get(sessionId);
+        game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             player = game.getPlayerById(playerId);

@@ -1,4 +1,3 @@
-const HashMap = require("hashmap");
 const Player = require("./Player");
 
 const GameState = {
@@ -18,7 +17,7 @@ module.exports.GameSession = class {
         this.id = id;
         this.name = name;
         this.time_left = lifetime;
-        this.players = new HashMap();
+        this.players = new Array();
         this.managSocket = null;
         this.state = GameState.LOBBY;
 
@@ -26,12 +25,12 @@ module.exports.GameSession = class {
 
     getPlayersInfo() {
 
-        return this.players.values().map((player) => {
+        return this.players.map((pl) => {
 
             return {
-                name: player.name,
-                pos: player.pos,
-                total: player.total
+                name: pl.name,
+                pos: pl.pos,
+                total: pl.total
             };
 
         });
@@ -40,20 +39,20 @@ module.exports.GameSession = class {
 
     getPlayerById(id) {
 
-        return this.players.get(id);
+        return this.players.find((pl) => pl.id == id);
 
     }
 
     nameIsTaken(username) {
 
-        return this.players.values().find((player) => player.name == username);
+        return this.players.find((pl) => pl.name == username);
 
     }
 
     addPlayer(id, name) {
 
-        let newPlayer = new Player(name);
-        this.players.set(id, newPlayer);
+        let newPlayer = new Player(id, name);
+        this.players.push(newPlayer);
         if (this.managSocket) {
 
             this.managSocket.emit("new-player", { name,  pos: newPlayer.pos, total: newPlayer.total });
@@ -64,14 +63,17 @@ module.exports.GameSession = class {
 
     removePlayer(id) {
 
-        let player = {};
-        if (this.players.has(id)) {
+        let player = this.players.find((pl) => pl.id == id);
+        if (player) {
 
-            player = this.players.get(id);
-            this.players.remove(id);
+            this.players = this.players.filter((pl) => pl.id != id);
+            return player.name;
 
         }
-        return player.name;
+        else {
+        
+            return undefined;
+        }
 
     }
 
@@ -97,7 +99,7 @@ module.exports.GameSession = class {
 
     broadcast(type, params, except) {
 
-        for (let player of this.players.values()) {
+        for (let player of this.players) {
 
             if (player.socket && player.name != except) {
 

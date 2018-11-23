@@ -2,8 +2,9 @@
 
 class Player {
 
-    constructor(name) {
+    constructor(id, name) {
 
+        this.id = id;
         this._position = 1;
         this.name = name;
         this.socket = null;
