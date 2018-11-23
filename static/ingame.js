@@ -3,8 +3,6 @@ let confirm_input = document.getElementById("reg_confirm");
 let params = (new URL(document.location)).searchParams;
 let gameSession = params.get("session");
 
-let sessionName;
-let username;
 let socket;
 let dice;
 
@@ -15,7 +13,55 @@ const SessionState = {
     ENDING: "ending"
 }
 
-function addPlayerName(name) {
+function updateTableRow(pos, name, total) {
+
+    let table = document.getElementById("lead");
+    let i = 1;
+    let find = false;
+    for (; i < table.rows.length; ++i) {
+
+        let row = table.rows[i]
+        if (row.getElementsByTagName("td")[1].innerHTML == name) {
+
+            find = true;
+            row.getElementsByTagName("td")[0].innerHTML = pos;
+            row.getElementsByTagName("td")[2].innerHTML = total;
+            break;
+
+        }
+
+    }
+    return find ? table.rows[i] : null;
+
+}
+
+function alignRowInTable(tr) {
+    
+    let table = document.getElementById("lead");
+    let i = 1;
+    let newPos = parseInt(tr.getElementsByTagName("td")[0].innerHTML);
+    for (; i < table.rows.length; ++i) {
+
+        if (parseInt(table.rows[i].getElementsByTagName("td")[0].innerHTML) < newPos) {
+
+            break;
+
+        }
+
+    }
+    if (i != table.rows.length) {
+
+        table.insertBefore(tr, table.rows[i]);
+    
+    } else {
+
+        table.appendChild(tr);
+
+    }
+
+}
+
+function addPlayer(name, pos, total) {
 
     let list = document.getElementById("player_list");
     let list_element = document.createElement("li");
@@ -23,6 +69,19 @@ function addPlayerName(name) {
         name
     ));
     list.appendChild(list_element);
+
+    let newPlayerInfo = { initPos: pos, name, total };
+    players.push(newPlayerInfo);
+
+    let tr = document.createElement("tr");
+    for (let prop in newPlayerInfo) {
+
+        let td = document.createElement("td");
+        td.textContent = newPlayerInfo[prop];
+        tr.appendChild(td);
+
+    }
+    alignRowInTable(tr);
 
 }
 
@@ -98,20 +157,11 @@ function setSessionState(sessionState) {
 function connect() {
 
     socket = io.connect("localhost:5000/game");
-    socket.on("player-list", function(data) {
-
-        for (let player of data) {
-
-            addPlayerName(player.name);
-
-        }
-
-    });
     socket.on("new-player", function(data) {
 
-        if (data.name) {
+        if (data.name && !players.find((pl) => pl.name == data.name)) {
 
-            addPlayerName(data.name);
+            addPlayer(data.name, data.pos, data.total);
 
         }
 
@@ -120,6 +170,19 @@ function connect() {
 
         setSessionState(SessionState.INGAME);
         renderGame();
+
+    });
+    socket.on("update-player", function(data) {
+
+        console.log(data);
+        let player = players.find((pl) => pl.name == data.name);
+        if (player) {
+
+            let row = updateTableRow(data.path[data.path.length - 1], data.name, data.total);
+            alignRowInTable(row);
+            player.ghost.goby(data.path);
+
+        }
 
     });
 
@@ -131,54 +194,59 @@ onGameRendered = function() {
     let el = document.querySelector(".die");
     dice = new Die(el);
     el.classList.remove("invisible");
-    el.addEventListener("click", () => {
+    el.addEventListener("click", async() => {
 
-        dice.startRoll();
-        fetch("game/dice", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
+        if (!localGhost.isGoing() && !dice.isRolling()) {
+
+            dice.startRoll();
+
+            try {
+            
+                let response = await fetch("game/dice", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+                let data = await response.json();
+                let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
+                alignRowInTable(row);
+                dice.endRoll(data.dice, () => {
+
+                    localGhost.goby(data.path);
+
+                });
+
+            } catch(error) {
+
+                console.log("Error in request to the game/dice api: \n" + error);
+            
             }
-        }).then((response) => {
 
-            console.log(response);
-            return response.json();
-
-        }).then((data) => {
-
-            console.log(data);
-            dice.endRoll(data.dice);
-
-        }).catch((error) => {
-
-            console.log("Error in request to the game/dice api: \n" + error);
-    
-        });
+        }
 
     });
 
 };
 
 
-function checkGameState() {
+async function checkGameState() {
 
     let body = {
         sessionId: gameSession
     };
-    fetch("game", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-    }).then((response) => {
+    try {
 
-        return response.json();
-
-    }).then((data) => {
-
+        let response = await fetch("game", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        let data = await response.json();
         if (data.error) {
 
             console.log("Response from game api return error: \n" + data.error);
@@ -190,6 +258,13 @@ function checkGameState() {
         document.getElementById("game_name_2").textContent = sessionName;
         if (data.playerState != SessionState.UNAUTH) {
 
+            username = data.username;
+            document.querySelector(".player-info > span").textContent = username;
+            for (let pl of data.playerList) {
+
+                addPlayer(pl.name, pl.pos, pl.total);
+        
+            }
             connect();
             if (data.playerState == SessionState.LOBBY) {
 
@@ -204,34 +279,32 @@ function checkGameState() {
         }
         setSessionState(data.playerState);
 
-    }).catch((error) => {
+    } catch(error) {
 
         console.log("Error in request to the game api: \n" + error);
 
-    });
+    }
 
 }
 
-function registerInGame() {
+async function registerInGame() {
 
     let username_input = document.getElementById("username");
     let body = {
         sessionId: gameSession,
         username: username_input.value
     };
-    fetch("game/reg", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-    }).then((response) => {
+    try {
 
-        return response.json();
-
-    }).then((data) => {
-
+        let response = await fetch("game/reg", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        let data = await response.json();
         if (data.error) {
 
             console.log("Response from game/reg api return error: \n" + data.error);
@@ -239,16 +312,22 @@ function registerInGame() {
 
         }
         username = username_input.value;
+        document.querySelector(".player-info > span").textContent = username;
+        for (let pl of data.playerList) {
+
+            addPlayer(pl.name, pl.pos, pl.total);
+    
+        }
         setSessionState(SessionState.LOBBY);
         document.getElementById("game_name_1").textContent = sessionName;
         connect();
         setTimeout(loadLibraries, 1000);
 
-    }).catch((error) => {
+    } catch(error) {
 
         console.log("Error in request to the game/reg api: \n" + error);
 
-    });
+    }
 
 }
 

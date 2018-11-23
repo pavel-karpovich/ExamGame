@@ -7,6 +7,10 @@ class Die {
         this.z = 0;
         this.step = 0;
         this.el = el;
+        this.frames = 0;
+        this._forceStop = false;
+        this._rolling = false;
+        this.onRollingEnd = [];
         
     }
 
@@ -15,8 +19,6 @@ class Die {
         return [1, 2, 3, 4, 5, 6];
 
     }
-
-
 
     get value() {
 
@@ -27,11 +29,11 @@ class Die {
     _setFinalCoords() {
 
         let coords = [
-            [85, 0, -5],
+            [-95, 0, 5],
             [-5, 95, 0],
             [-5, 5, 0],
-            [-5, 95, 0],
-            [-95, 0, 5],
+            [175, 85, 0],
+            [85, 0, -5],
             [-5, 185, 0]
         ][this.index];
 
@@ -54,6 +56,7 @@ class Die {
 
     rotate() {
 
+        this.frames += 1;
         this.step += 0.01;
         this.x += 5;
         this.y += 20;
@@ -61,28 +64,49 @@ class Die {
         this._setTransform();
 
         let cb = () => this.rotate();
-        if (this.__rolling) {
+        if (!this._forceStop || this.frames < 40) {
 
             window.requestAnimationFrame(cb.bind(this));
+
+        } else {
+
+            this.el.classList.remove("rolling");
+            this._setFinalCoords();
+            for (let cb of this.onRollingEnd) {
+
+                setTimeout(cb, 1500);
+
+            }
 
         }
 
     }
 
+    isRolling() {
+
+        return this._rolling;
+
+    }
+
     startRoll() {
 
-        this.__rolling = true;
+        this._rolling = true;
+        this._forceStop = false;
         this.el.classList.add("rolling");
+        this.frames = 0;
+        this.onRollingEnd = [
+            () => this._rolling = false
+        ];
+        this.onRollingEnd[0].bind(this);
         this.rotate();
 
     }
     
-    endRoll(val) {
+    endRoll(val, callback) {
 
-        this.index = val;
-        this.__rolling = false;
-        this.el.classList.remove("rolling");
-        this._setFinalCoords();
+        this.index = val - 1;
+        this.onRollingEnd.push(callback);
+        this._forceStop = true;
 
     }
 

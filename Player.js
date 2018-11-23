@@ -2,25 +2,27 @@
 
 class Player {
 
-    constructor(name, socket) {
+    constructor(name) {
 
-        this.position = 0;
+        this._position = 1;
         this.name = name;
-        this.socket = socket;
+        this.socket = null;
+        this.total = 0;
 
     }
 
-    setPos(num) {
+    set pos(num) {
 
-        this.position = num;
-
-    }
-
-    getPos() {
-
-        return this.position;
+        this._position = num;
 
     }
+
+    get pos() {
+
+        return this._position;
+
+    }
+    
 }
 
 module.exports = Player;

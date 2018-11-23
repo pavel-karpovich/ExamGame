@@ -8,6 +8,7 @@
   
   .die:not(.rolling) {
     transition: transform 500ms ease-out;
+    cursor: pointer;
   }
   .die > div {
     background: #f44336;

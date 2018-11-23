@@ -13,6 +13,7 @@ const io = socketIO(server);
 
 const { ID, getCookie, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
+const { getPath } = require("./Level");
 
 let gameSessions = new HashMap();
 
@@ -201,6 +202,9 @@ app.post("/game", function(request, response) {
             let player = game.getPlayerById(playerId);
             if (player) {
 
+                responseJson.username = player.name;
+                responseJson.playerList = game.getPlayersInfo();
+
                 if (game.state == GameState.LOBBY) {
                     
                     responseJson.playerState = PlayerGameState.LOBBY;
@@ -208,6 +212,7 @@ app.post("/game", function(request, response) {
                 } else if (game.state == GameState.RUNNING) {
 
                     responseJson.playerState = PlayerGameState.INGAME;
+                    
 
                 }
 
@@ -220,7 +225,7 @@ app.post("/game", function(request, response) {
 
         sessionId = request.body.sessionId;
         game = gameSessions.get(sessionId);
-        if (game.state != GameState.LOBBY) {
+        if (game && game.state != GameState.LOBBY) {
             
             responseJson.error = "Game already running. Can't join.";
 
@@ -251,7 +256,8 @@ app.post("/game/reg", function(request, response) {
 
                     } while (game.getPlayerById(userId));
 
-                    game.addPlayer(userId, username, null);
+                    game.addPlayer(userId, username);
+                    responseJson.playerList = game.getPlayersInfo();
 
                     response.cookie("session", sessionId, { maxAge: COOKIE_AGE, httpOnly: true });
                     response.cookie("player", userId, { maxAge: COOKIE_AGE, httpOnly: true });
@@ -277,8 +283,32 @@ app.post("/game/reg", function(request, response) {
 app.post("/game/dice", function(request, response) {
 
     responseJson = {};
-    let dice = randomDice();
-    responseJson.dice = dice;
+    let sessionId = request.cookies["session"];
+    let playerId = request.cookies["player"];
+    if (playerId && sessionId) {
+
+        game = gameSessions.get(sessionId);
+        if (game) {
+
+            let player = game.getPlayerById(playerId);
+            if (player) {
+                
+                let dice = randomDice();
+                let path = getPath(player.pos, dice);
+                player.pos = path[path.length - 1];
+                
+                ++player.total;
+                game.updatePlayerPositionAndStats(player.name, path, player.total);
+
+                responseJson.dice = dice;
+                responseJson.total = player.total;
+                responseJson.path = path;
+                
+            }
+
+        }
+
+    }
     response.json(responseJson);
 
 });
@@ -325,8 +355,8 @@ io.of("game")
             player = game.getPlayerById(playerId);
             if (player) {
 
+                game.notifyAboutNewPlayer(player.name, player.pos, player.total);
                 player.socket = socket;
-                player.socket.emit("player-list", game.getPlayersInfo());
 
             }
 

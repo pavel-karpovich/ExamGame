@@ -21,6 +21,6 @@ module.exports.getCookie = function(cookieString, name) {
 
 module.exports.randomDice = function() {
 
-    return Math.floor(Math.random() * 6);
+    return 1 + Math.floor(Math.random() * 6);
 
 }

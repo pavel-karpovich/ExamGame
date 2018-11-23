@@ -29,7 +29,9 @@ module.exports.GameSession = class {
         return this.players.values().map((player) => {
 
             return {
-                name: player.name
+                name: player.name,
+                pos: player.pos,
+                total: player.total
             };
 
         });
@@ -48,21 +50,13 @@ module.exports.GameSession = class {
 
     }
 
-    addPlayer(id, name, socket) {
+    addPlayer(id, name) {
 
-        this.players.set(id, new Player(name, socket));
+        let newPlayer = new Player(name);
+        this.players.set(id, newPlayer);
         if (this.managSocket) {
 
-            this.managSocket.emit("new-player", { name });
-
-        }
-        for (let player of this.players.values()) {
-
-            if (player.socket) {
-
-                player.socket.emit("new-player", { name });
-
-            }
+            this.managSocket.emit("new-player", { name,  pos: newPlayer.pos, total: newPlayer.total });
 
         }
 
@@ -84,11 +78,30 @@ module.exports.GameSession = class {
     readySteadyGo() {
 
         this.state = GameState.RUNNING;
+        this.broadcast("start-game");
+
+    }
+
+    updatePlayerPositionAndStats(name, path, total) {
+
+        this.broadcast("update-player", { name, path, total }, name);
+
+    }
+
+    notifyAboutNewPlayer(name, pos, total) {
+
+        this.broadcast("new-player", { name, pos, total });
+        
+    }
+
+
+    broadcast(type, params, except) {
+
         for (let player of this.players.values()) {
 
-            if (player.socket) {
+            if (player.socket && player.name != except) {
 
-                player.socket.emit("start-game");
+                player.socket.emit(type, params);
 
             }
 
