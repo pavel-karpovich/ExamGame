@@ -105,7 +105,11 @@ class Die {
     endRoll(val, callback) {
 
         this.index = val - 1;
-        this.onRollingEnd.push(callback);
+        if (callback) {
+        
+            this.onRollingEnd.push(callback);
+        
+        }
         this._forceStop = true;
 
     }

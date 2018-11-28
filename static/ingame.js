@@ -87,15 +87,21 @@ function addPlayer(name, pos, total) {
 
 function loadLibraries(callback) {
 
+    let script0 = document.createElement("script");
+    //script1.setAttribute("src", "https://preview.babylonjs.com/cannon.js");
+    script0.setAttribute("src", "static/cdn/cannon.js");
+
     let script1 = document.createElement("script");
-    script1.setAttribute("src", "https://cdn.babylonjs.com/babylon.max.js");
+    //script1.setAttribute("src", "https://cdn.babylonjs.com/babylon.max.js");
+    script1.setAttribute("src", "static/cdn/babylon.max.js");
 
     let script2 = document.createElement("script");
-    script2.setAttribute("src", "https://preview.babylonjs.com/loaders/babylonjs.loaders.js");
+    //script2.setAttribute("src", "https://preview.babylonjs.com/loaders/babylonjs.loaders.js");
+    script2.setAttribute("src", "static/cdn/babylonjs.loaders.js");
 
 
     let countLoad = 0;
-    let countAll = 2;
+    let countAll = 3;
 
     let cb_wrapper = () => {
 
@@ -103,7 +109,7 @@ function loadLibraries(callback) {
         if (countLoad == countAll) {
 
             let script3 = document.createElement("script");
-            script3.setAttribute("src", "static/babylon.manager.js");
+            script3.setAttribute("src", "static/cdn/babylon.manager.js");
             if (callback) {
                 
                 let cb_wrapper2 = () => {
@@ -119,8 +125,10 @@ function loadLibraries(callback) {
         }
 
     }
+    script0.onload = cb_wrapper;
     script1.onload = cb_wrapper;
     script2.onload = cb_wrapper;
+    document.body.appendChild(script0);
     document.body.appendChild(script1);
     document.body.appendChild(script2);
 
@@ -156,7 +164,7 @@ function setSessionState(sessionState) {
 
 function connect() {
 
-    socket = io.connect("localhost:5000/game");
+    socket = io.connect("/game");
     socket.on("new-player", function(data) {
 
         if (data.name && !players.find((pl) => pl.name == data.name)) {
@@ -191,32 +199,45 @@ function connect() {
 onGameRendered = function() {
 
     console.log("START!");
+    let hud = document.querySelector(".hud-container");
+    hud.classList.remove("invisible");
     let el = document.querySelector(".die");
     dice = new Die(el);
-    el.classList.remove("invisible");
     el.addEventListener("click", async() => {
 
-        if (!localGhost.isGoing() && !dice.isRolling()) {
+        if (!localGhost.isGoing() && !dice.isRolling() && localGhost.cell != 93) {
 
             dice.startRoll();
 
             try {
             
+                let body = {
+                    sessionId: gameSession
+                };
                 let response = await fetch("game/dice", {
                     method: "POST",
                     credentials: "include",
                     headers: {
                         "Content-Type": "application/json"
-                    }
+                    },
+                    body: JSON.stringify(body)
                 });
                 let data = await response.json();
-                let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
-                alignRowInTable(row);
-                dice.endRoll(data.dice, () => {
+                if (data.dice) {
 
-                    localGhost.goby(data.path);
+                    let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
+                    alignRowInTable(row);
+                    dice.endRoll(data.dice, () => {
 
-                });
+                        localGhost.goby(data.path);
+
+                    });
+
+                } else {
+                    
+                    dice.endRoll(1);
+
+                }
 
             } catch(error) {
 
@@ -307,7 +328,7 @@ async function registerInGame() {
         let data = await response.json();
         if (data.error) {
 
-            console.log("Response from game/reg api return error: \n" + data.error);
+            alert(data.error);
             return -1;
 
         }

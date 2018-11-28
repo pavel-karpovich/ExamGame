@@ -38,6 +38,7 @@ module.exports.getPath = function(from, count) {
         from = 37;
         path.push(from);
         --count;
+
     }
     let end = from + count;
     for (i = from + 1; i <= end && i <= 93; ++i) {

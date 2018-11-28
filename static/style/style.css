@@ -45,27 +45,33 @@ div>#scene {
     z-index: 10;
 }
 
-.leaderboard-container {
+.window {
     position: absolute;
     box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.2), 0 8px 24px 0 rgba(0, 0, 0, 0.19);
-    right: 100px;
-    top: 300px;
-    width: 16%;
-    height: 40%;
     background-color: rgba(33, 33, 33, 0.5);
-    z-index: 5;
 
 }
 
-.lead-frame {
+.window-frame {
     height: 8%;
     cursor: pointer;
     background-color: rgba(22, 22, 22, 0.75);
 }
 
-.leaderboard {
-    overflow: hidden;
+.window-content {
+    box-sizing: border-box;
     height: 92%;
+    border: 1px solid rgba(22, 22, 22, 0.75);
+    border-top: 0;
+}
+
+.leaderboard-window {
+    right: 10px;
+    top: 300px;
+    width: 16%;
+    height: 40%;
+    z-index: 5;
+
 }
 
 .noselect {
@@ -92,4 +98,12 @@ td {
     width: 30%;
     background: rgba(32, 32, 32, 0.2);
     padding: 1.5%;
+}
+
+.task-window {
+    left: 200px;
+    top: 200px;
+    width: 50%;
+    height: 50%;
+    z-index: 6;
 }

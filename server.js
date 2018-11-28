@@ -5,13 +5,12 @@ const bodyParser = require("body-parser");
 const http = require("http");
 const path = require("path");
 const socketIO = require("socket.io");
-const HashMap = require("hashmap");
 
 const app = express();
 const server = http.Server(app);
 const io = socketIO(server);
 
-const { ID, getCookie, randomDice } = require("./utils");
+const { ID, getCookie, getQueryParams, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
 const { getPath } = require("./Level");
 
@@ -39,7 +38,7 @@ function endGame() {
 
 }
 
-app.set("port", 5000);
+app.set("port", 8081);
 
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -52,12 +51,17 @@ app.use(function(req, res, next) {
 */
 app.use("/static", express.static(__dirname + "/static"));
 
+
+app.get("/test", function(request, response) {
+
+    response.sendFile(path.join(__dirname, "test.html"));
+
+});
 app.get("/", function(request, response) {
 
     response.sendFile(path.join(__dirname, "index.html"));
 
 });
-
 app.get("/manage", function(request, response) {
 
     response.sendFile(path.join(__dirname, "manage.html"));
@@ -65,28 +69,24 @@ app.get("/manage", function(request, response) {
 });
 app.post("/manage", function(request, response) {
 
-    responseJson = {
+    let responseJson = {
         sessionState: ManageGameState.NONE
     };
-    sessionId = request.cookies["manage"];
-    if (sessionId) {
+    let sessionId = request.cookies["manage"];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
 
-        game = gameSessions.find((gm) => gm.id == sessionId);
-        if (game) {
+        if (game.state == GameState.LOBBY) {
 
-            if (game.state == GameState.LOBBY) {
+            responseJson.directLink =
+                request.protocol + "://" + request.get("host") + "/game?session=" + sessionId;
+            responseJson.players = game.getPlayersInfo();
+            responseJson.sessionState = ManageGameState.PREPARE;
 
-                responseJson.directLink =
-                    request.protocol + "://" + request.get("host") + "/game?session=" + sessionId;
-                responseJson.players = game.getPlayersInfo();
-                responseJson.sessionState = ManageGameState.PREPARE;
+        } else if (game.state == GameState.RUNNING) {
 
-            } else if (game.state == GameState.RUNNING) {
-
-                responseJson.players = game.getPlayersInfo();
-                responseJson.sessionState = ManageGameState.GAME;
-
-            }
+            responseJson.players = game.getPlayersInfo();
+            responseJson.sessionState = ManageGameState.GAME;
 
         }
 
@@ -96,7 +96,7 @@ app.post("/manage", function(request, response) {
 });
 app.post("/manage/create", function(request, response) {
 
-    responseJson = {};
+    let responseJson = {};
     if (request.body) {
 
         let name = request.body.name;
@@ -107,13 +107,13 @@ app.post("/manage/create", function(request, response) {
 
                 uniqueId = ID();
 
-            } while (gameSessions.find((gm) => gm.id == sessionId));
-            game = new GameSession(uniqueId, name, lifetime);
+            } while (gameSessions.find((gm) => gm.id == uniqueId));
+            let game = new GameSession(uniqueId, name, lifetime);
             let cb = (id) => {
 
                 return () => {
 
-                    let gm = gameSessions.find((gm) => gm.id == sessionId);
+                    let gm = gameSessions.find((gm) => gm.id == id);
                     if (gm) {
 
                         if (gm.state == GameState.LOBBY) {
@@ -144,20 +144,16 @@ app.post("/manage/create", function(request, response) {
 
 app.post("/manage/start", function(request, response) {
 
-    responseJson = {};
-    sessionId = request.cookies["manage"];
-    if (sessionId) {
+    let responseJson = {};
+    let sessionId = request.cookies["manage"];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
 
-        game = gameSessions.find((gm) => gm.id == sessionId);
-        if (game) {
+        game.readySteadyGo();
 
-            game.readySteadyGo();
+    } else {
 
-        } else {
-
-            responseJson.error = "Invalid SessionID";
-
-        }
+        responseJson.error = "Invalid SessionID";
 
     }
     response.json(responseJson);
@@ -168,7 +164,7 @@ app.get("/game", function(request, response) {
     let sessionId = request.query.session;
     if (sessionId) {
 
-        game = gameSessions.find((gm) => gm.id == sessionId);
+        let game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             response.sendFile(path.join(__dirname, "game.html"));
@@ -188,51 +184,46 @@ app.get("/game", function(request, response) {
 });
 app.post("/game", function(request, response) {
 
-    let sessionId = request.cookies["session"];
-    let playerId = request.cookies["player"];
+    let sessionId = request.body.sessionId;
     let responseJson = {
         playerState: PlayerGameState.UNAUTH
     };
-    let game;
-    if (playerId && sessionId) {
+    let playerId = request.cookies[sessionId];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    responseJson.sessionName = game.name;
+    if (game) {
 
-        game = gameSessions.find((gm) => gm.id == sessionId);
-        if (game) {
+        let player = game.getPlayerById(playerId);
+        if (player) {
 
-            let player = game.getPlayerById(playerId);
-            if (player) {
+            responseJson.username = player.name;
+            responseJson.playerList = game.getPlayersInfo();
 
-                responseJson.username = player.name;
-                responseJson.playerList = game.getPlayersInfo();
+            if (game.state == GameState.LOBBY) {
+                
+                responseJson.playerState = PlayerGameState.LOBBY;
 
-                if (game.state == GameState.LOBBY) {
-                    
-                    responseJson.playerState = PlayerGameState.LOBBY;
+            } else if (game.state == GameState.RUNNING) {
 
-                } else if (game.state == GameState.RUNNING) {
-
-                    responseJson.playerState = PlayerGameState.INGAME;
-                    
-
-                }
+                responseJson.playerState = PlayerGameState.INGAME;
+                
 
             }
 
         }
 
     }
-    if (responseJson.playerState == PlayerGameState.UNAUTH) {
+    //if (responseJson.playerState == PlayerGameState.UNAUTH) {
+    else {
 
-        sessionId = request.body.sessionId;
-        game = gameSessions.find((gm) => gm.id == sessionId);
-        if (game && game.state != GameState.LOBBY) {
+        if (game.state != GameState.LOBBY) {
             
             responseJson.error = "Game already running. Can't join.";
+            responseJson.sessionName = game.name;
 
         }
 
     }
-    responseJson.sessionName = game.name;
     response.json(responseJson);
 
 });
@@ -259,8 +250,7 @@ app.post("/game/reg", function(request, response) {
                     game.addPlayer(userId, username);
                     responseJson.playerList = game.getPlayersInfo();
 
-                    response.cookie("session", sessionId, { maxAge: COOKIE_AGE, httpOnly: true });
-                    response.cookie("player", userId, { maxAge: COOKIE_AGE, httpOnly: true });
+                    response.cookie(sessionId, userId, { maxAge: COOKIE_AGE, httpOnly: true });
 
                 } else {
 
@@ -282,30 +272,26 @@ app.post("/game/reg", function(request, response) {
 });
 app.post("/game/dice", function(request, response) {
 
-    responseJson = {};
-    let sessionId = request.cookies["session"];
-    let playerId = request.cookies["player"];
-    if (playerId && sessionId) {
+    let responseJson = {};
+    let sessionId = request.body.sessionId;
+    let playerId = request.cookies[sessionId];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
 
-        game = gameSessions.find((gm) => gm.id == sessionId);
-        if (game) {
+        let player = game.getPlayerById(playerId);
+        if (player) {
+            
+            let dice = randomDice();
+            let path = getPath(player.pos, dice);
+            player.pos = path[path.length - 1];
+            
+            ++player.total;
+            game.updatePlayerPositionAndStats(player.name, path, player.total);
 
-            let player = game.getPlayerById(playerId);
-            if (player) {
-                
-                let dice = randomDice();
-                let path = getPath(player.pos, dice);
-                player.pos = path[path.length - 1];
-                
-                ++player.total;
-                game.updatePlayerPositionAndStats(player.name, path, player.total);
-
-                responseJson.dice = dice;
-                responseJson.total = player.total;
-                responseJson.path = path;
-                
-            }
-
+            responseJson.dice = dice;
+            responseJson.total = player.total;
+            responseJson.path = path;
+            
         }
 
     }
@@ -323,8 +309,8 @@ io.of("manage")
     .on("connection", function(socket) {
 
         console.log(socket.id + " Manager connected!");
-        sessionId = getCookie(socket.handshake.headers.cookie, "manage");
-        game = gameSessions.find((gm) => gm.id == sessionId);
+        let sessionId = getCookie(socket.handshake.headers.cookie, "manage");
+        let game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             game.managSocket = socket;
@@ -346,15 +332,15 @@ io.of("manage")
 io.of("game")
     .on("connection", function(socket) {
 
-        console.log(socket.id + " Player connected!");
-        sessionId = getCookie(socket.handshake.headers.cookie, "session");
-        playerId = getCookie(socket.handshake.headers.cookie, "player");
-        game = gameSessions.find((gm) => gm.id == sessionId);
+        let sessionId = getQueryParams(socket.handshake.headers.referer)["session"];
+        let playerId = getCookie(socket.handshake.headers.cookie, sessionId);
+        let game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
             player = game.getPlayerById(playerId);
             if (player) {
 
+                console.log(`Player ${player.name} connected!`);
                 game.notifyAboutNewPlayer(player.name, player.pos, player.total);
                 player.socket = socket;
 
@@ -362,22 +348,22 @@ io.of("game")
 
         } else {
 
+            console.log("Unknown player disconnected!");
             socket.disconnect();
-            console.log(this.id + " Player disconnected!");
 
         }
         socket.on("disconnect", function() {
 
-            console.log(this.id + " Player disconnected!");
+            console.log("Some player disconnected!");
 
         });
 
     });
 
 
-server.listen(5000, function() {
+server.listen(8081, function() {
 
-    console.log("Starting server on port 5000");
+    console.log("Starting server on port 8081");
 
 });
 

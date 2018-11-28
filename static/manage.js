@@ -54,7 +54,7 @@ function setSessionState(sessionState) {
 
 function registerSocket() {
 
-    socket = io.connect("localhost:5000/manage");
+    socket = io.connect("/manage");
     socket.on("new-player", function(data) {
 
         if (data.name) {

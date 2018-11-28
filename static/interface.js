@@ -1,4 +1,3 @@
-let frame = document.querySelector(".lead-frame");
 
 function getCoords(elem) {
 
@@ -10,37 +9,40 @@ function getCoords(elem) {
 
 }
 
-frame.onmousedown = function(e) {
+function preventStandardDrag() {
 
-    let coords = getCoords(frame.parentElement);
+    return false;
+    
+}
+
+function startCustomDrag(e) {
+
+    let coords = getCoords(this.parentElement);
     let shiftX = e.pageX - coords.left;
     let shiftY = e.pageY - coords.top;
 
-    function moveAt(e) {
+    let moveAt = (e) => {
 
-        frame.parentElement.style.left = e.pageX - shiftX + "px";
-        frame.parentElement.style.top = e.pageY - shiftY + "px";
+        this.parentElement.style.left = e.pageX - shiftX + "px";
+        this.parentElement.style.top = e.pageY - shiftY + "px";
 
     }
     moveAt(e);
+    document.onmousemove = moveAt.bind(this);
 
-    document.onmousemove = function(e) {
-        
-        moveAt(e);
-
-    };
-
-    frame.onmouseup = function() {
+    this.onmouseup = () => {
 
         document.onmousemove = null;
-        frame.onmouseup = null;
+        this.onmouseup = null;
 
     };
 
 }
 
-frame.ondragstart = function() {
+let leadFrame = document.querySelector(".leaderboard-window > .window-frame");
+leadFrame.ondragstart = preventStandardDrag;
+leadFrame.onmousedown = startCustomDrag;
 
-    return false;
-
-};
+let taskFrame = document.querySelector(".task-window > .window-frame");
+taskFrame.ondragstart = preventStandardDrag;
+taskFrame.onmousedown = startCustomDrag;

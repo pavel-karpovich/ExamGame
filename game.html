@@ -17,26 +17,32 @@
         <div>
             <canvas id="scene" oncontextmenu="return false;"></canvas>
         </div>
-        <div class="hud-container">
+        <div class="hud-container invisible">
             <div class="player-info">
                 <span class="noselect"></span>
             </div>
-            <div class="leaderboard-container">
-                <div class="lead-frame"></div>
-                <div class="leaderboard">
+            <div class="window leaderboard-window">
+                <div class="window-frame"></div>
+                <div class="window-content">
                     <table>
                         <tbody id="lead">
                             <tr>
                                 <th>Поле</th>
                                 <th>Имя</th>
-                                <th>Кол-во</th>
+                                <th>Ходы</th>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+            <div class="window task-window invisible">
+                <div class="window-frame"></div>
+                <div class="window-content">
+
+                </div>
+            </div>
             <div class="dice-box">
-                <div class="die invisible">
+                <div class="die">
                     <div value="1">
                         <span></span>
                     </div>

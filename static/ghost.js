@@ -2,39 +2,24 @@ let cells = [];
 let sessionName;
 let username;
 
-const SPEED = 0.7;//0.3;
+const SPEED = 0.7; // 0.3
 
-function getRandomRotation() {
-
-    let rndAngle = Math.random() * 2 * Math.PI;
-    return new BABYLON.Vector3( -Math.PI * 0.4, rndAngle, 0);
-
-}
-
-function getRandomPosition(initVec) {
-
-    return new BABYLON.Vector3(
-        initVec.x + Math.random() * 10 - 5,
-        initVec.y + Math.random() * 2,
-        initVec.z + Math.random() * 10 - 5
-    );
-
+const BLEND_TIME  = {
+    IdleToWalk: 500,
+    WalkToIdle: 1000
 }
 
 
 class Ghost {
 
-    constructor(name, initPos) {
+    constructor(initPos, playerMesh, idleAnim, walkAnim) {
 
-        this._mesh = Ghost.origin.clone("m_" + name);
-        this._mesh.skeleton = Ghost.origin.skeleton.clone("s_" + name);
-        this._mesh.position = getRandomPosition(cells[initPos - 1].mesh.position);
-        this._mesh.rotation = getRandomRotation();
-        this._mesh.visibility = 1;
-        //this._mesh.checkCollisions = true;
+        this._mesh = playerMesh;
 
-        this._mesh.skeleton.beginAnimation("fantome|idle_porter|Baked frames", true);
+        this.idleAnim = idleAnim;
+        this.walkAnim = walkAnim;
 
+        this._cell = initPos;
         this._needMove = false;
         this._walkPath = [];
         this.deltaTime = 0;
@@ -78,12 +63,39 @@ class Ghost {
 
     }
 
+    _blendStep(from, to, delta) {
+
+        if (from.weight == 0.0) {
+
+            return;
+
+        } else {
+
+            from.weight -= delta;
+            to.weight = 1.0 - from.weight;
+            setTimeout(this._blendStep.bind(this), 1000 / 30, from, to, delta);
+
+        }
+
+    }
+
+    blendAnim(from, to, time) {
+
+        let delta = (1000 / 30) / time;
+        from.weight = 1.0;
+        to.weight = 0.0;
+        to.syncWith(null);
+        from.syncWith(to);
+        setTimeout(this._blendStep.bind(this), 1000 / 15, from, to, delta);
+
+    }
+
     goby(path) {
        
         if (!this._needMove) {
 
             this._walkPath = path;
-            this._mesh.skeleton.beginAnimation("fantome|marcher|Baked frames", true);
+            this.blendAnim(this.idleAnim, this.walkAnim, BLEND_TIME.IdleToWalk);
             this._calculate();
             this._needMove = true;
 
@@ -100,18 +112,20 @@ class Ghost {
         let ratio = deltaTime * this.FPS / 1000;
         let alignedEps = this.epsVector.scale(ratio * SPEED);
         let nextPosition = this._mesh.position.add(alignedEps);
-        let nextNormale = this.targetPos.subtract(nextPosition).normalize();
+        let nextNormale = this.targetPos.subtract(nextPosition);//.normalize();
         if (Math.sign(nextNormale.x) != Math.sign(this.normale.x) &&
             Math.sign(nextNormale.y) != Math.sign(this.normale.y) &&
             Math.sign(nextNormale.z) != Math.sign(this.normale.z)
         ) {
 
-            //this._mesh.position = this.targetPos;
+            // Stop walking;
             if (this._walkPath.length == 0) {
 
                 this._needMove = false;
                 this.targetPos = this._mesh.position;
-                this._mesh.skeleton.beginAnimation("fantome|idle|Baked frames", true);
+                this.blendAnim(this.walkAnim, this.idleAnim, BLEND_TIME.WalkToIdle);
+                let task = document.querySelector(".window.task-window"); 
+                task.classList.remove("invisible");
 
             } else {
 
@@ -121,7 +135,7 @@ class Ghost {
 
         } else {
 
-            this._mesh.position = nextPosition;
+            this._mesh.position.addInPlace(alignedEps);
 
         }
 
@@ -134,5 +148,3 @@ class Ghost {
     }
 
 }
-
-Ghost.origin = null;
