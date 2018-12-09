@@ -1,8 +1,10 @@
+"use strict"
+
 let cells = [];
 let sessionName;
 let username;
 
-const SPEED = 0.7; // 0.3
+const SPEED = 0.3;
 
 const BLEND_TIME  = {
     IdleToWalk: 500,
@@ -23,7 +25,11 @@ class Ghost {
         this._needMove = false;
         this._walkPath = [];
         this.deltaTime = 0;
-        this.FPS = FPS_FOR_NET;
+        this.FPS = 1;
+
+        this._timer = null;
+
+        this.onWalkEnd = null;
 
     }
 
@@ -50,7 +56,7 @@ class Ghost {
         this._cell = this._walkPath.shift();
         this.targetPos = cells[this._cell - 1].mesh.position.clone();
         this.targetPos.y += this._getRandomHeight();
-        this._mesh.lookAt(this.targetPos, 0, -Math.PI * 0.4);
+        this._mesh.lookAt(this.targetPos);
         let deltaVec = this.targetPos.subtract(this._mesh.position);
         let hyp = Math.sqrt(Math.pow(deltaVec.x, 2) + Math.pow(deltaVec.z, 2));
         let hypY = Math.sqrt(Math.pow(hyp, 2) + Math.pow(deltaVec.y, 2));
@@ -98,6 +104,8 @@ class Ghost {
             this.blendAnim(this.idleAnim, this.walkAnim, BLEND_TIME.IdleToWalk);
             this._calculate();
             this._needMove = true;
+            let moveWithCorrectThis = this.move.bind(this);
+            this._timer = setInterval(moveWithCorrectThis, 1000 / this.FPS);
 
         } else {
 
@@ -107,12 +115,10 @@ class Ghost {
 
     }
 
-    move(deltaTime) {
+    move() {
 
-        let ratio = deltaTime * this.FPS / 1000;
-        let alignedEps = this.epsVector.scale(ratio * SPEED);
-        let nextPosition = this._mesh.position.add(alignedEps);
-        let nextNormale = this.targetPos.subtract(nextPosition);//.normalize();
+        this._mesh.position.addInPlace(this.epsVector);
+        let nextNormale = this.targetPos.subtract(this._mesh.position);//.normalize();
         if (Math.sign(nextNormale.x) != Math.sign(this.normale.x) &&
             Math.sign(nextNormale.y) != Math.sign(this.normale.y) &&
             Math.sign(nextNormale.z) != Math.sign(this.normale.z)
@@ -122,10 +128,14 @@ class Ghost {
             if (this._walkPath.length == 0) {
 
                 this._needMove = false;
+                clearInterval(this._timer);
                 this.targetPos = this._mesh.position;
                 this.blendAnim(this.walkAnim, this.idleAnim, BLEND_TIME.WalkToIdle);
-                let task = document.querySelector(".window.task-window"); 
-                task.classList.remove("invisible");
+                if (this.onWalkEnd) {
+                    
+                    this.onWalkEnd();
+                    
+                }
 
             } else {
 
@@ -133,11 +143,7 @@ class Ghost {
 
             }
 
-        } else {
-
-            this._mesh.position.addInPlace(alignedEps);
-
-        }
+        } 
 
     }
 

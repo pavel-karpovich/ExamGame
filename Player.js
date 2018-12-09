@@ -9,6 +9,8 @@ class Player {
         this.name = name;
         this.socket = null;
         this.total = 0;
+        this._color = "#FFFFFF";
+        this.textureDataUrl = null;
 
     }
 
@@ -22,6 +24,18 @@ class Player {
 
         return this._position;
 
+    }
+
+    set color(col) {
+        
+        this._color = col;
+
+    }
+
+    get color() {
+
+        return this._color;
+        
     }
     
 }

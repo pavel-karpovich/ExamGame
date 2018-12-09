@@ -1,3 +1,5 @@
+"user strict"
+
 let confirm_input = document.getElementById("reg_confirm");
 
 let params = (new URL(document.location)).searchParams;
@@ -61,78 +63,94 @@ function alignRowInTable(tr) {
 
 }
 
-function addPlayer(name, pos, total) {
+function addPlayer(player) {
 
     let list = document.getElementById("player_list");
     let list_element = document.createElement("li");
     list_element.appendChild(document.createTextNode(
-        name
+        player.name
     ));
     list.appendChild(list_element);
 
-    let newPlayerInfo = { initPos: pos, name, total };
-    players.push(newPlayerInfo);
+    players.push(player);
 
     let tr = document.createElement("tr");
-    for (let prop in newPlayerInfo) {
 
-        let td = document.createElement("td");
-        td.textContent = newPlayerInfo[prop];
-        tr.appendChild(td);
+    let td1 = document.createElement("td");
+    td1.textContent = player.pos;
+    tr.appendChild(td1);
 
-    }
+    let td2 = document.createElement("td");
+    td2.textContent = player.name;
+    tr.appendChild(td2);
+
+    let td3 = document.createElement("td");
+    td3.textContent = player.total;
+    tr.appendChild(td3);
+
     alignRowInTable(tr);
 
 }
 
-function loadLibraries(callback) {
+// function loadLibraries(callback) {
 
-    let script0 = document.createElement("script");
-    //script1.setAttribute("src", "https://preview.babylonjs.com/cannon.js");
-    script0.setAttribute("src", "static/cdn/cannon.js");
+//     let script0 = document.createElement("script");
+//     //script1.setAttribute("src", "https://preview.babylonjs.com/cannon.js");
+//     script0.setAttribute("src", "static/cdn/cannon.js");
 
-    let script1 = document.createElement("script");
-    //script1.setAttribute("src", "https://cdn.babylonjs.com/babylon.max.js");
-    script1.setAttribute("src", "static/cdn/babylon.max.js");
+//     let script1 = document.createElement("script");
+//     //script1.setAttribute("src", "https://cdn.babylonjs.com/babylon.max.js");
+//     script1.setAttribute("src", "static/cdn/babylon.max.js");
 
-    let script2 = document.createElement("script");
-    //script2.setAttribute("src", "https://preview.babylonjs.com/loaders/babylonjs.loaders.js");
-    script2.setAttribute("src", "static/cdn/babylonjs.loaders.js");
+//     let script2 = document.createElement("script");
+//     //script2.setAttribute("src", "https://preview.babylonjs.com/loaders/babylonjs.loaders.js");
+//     script2.setAttribute("src", "static/cdn/babylonjs.loaders.js");
 
 
-    let countLoad = 0;
-    let countAll = 3;
+//     let countLoad = 0;
+//     let countAll = 3;
 
-    let cb_wrapper = () => {
+//     let cb_wrapper = () => {
 
-        ++countLoad;
-        if (countLoad == countAll) {
+//         ++countLoad;
+//         console.log("Load round 1");
+//         if (countLoad == countAll) {
 
-            let script3 = document.createElement("script");
-            script3.setAttribute("src", "static/cdn/babylon.manager.js");
-            if (callback) {
+//             let script3 = document.createElement("script");
+//             script3.setAttribute("src", "static/cdn/babylon.manager.js");
+
+//             countLoad = 0;
+//             countAll = 1;
+
+//             if (callback) {
                 
-                let cb_wrapper2 = () => {
+//                 let cb_wrapper2 = () => {
 
-                    callback();
+//                     console.log("Load round 2");
+//                     ++countLoad;
+//                     if (countLoad == countAll) {
 
-                }
-                script3.onload = cb_wrapper2;
+//                         callback();
 
-            }
-            document.body.appendChild(script3);
+//                     }
 
-        }
+//                 }
+//                 script3.onload = cb_wrapper2;
 
-    }
-    script0.onload = cb_wrapper;
-    script1.onload = cb_wrapper;
-    script2.onload = cb_wrapper;
-    document.body.appendChild(script0);
-    document.body.appendChild(script1);
-    document.body.appendChild(script2);
+//             }
+//             document.body.appendChild(script3);
 
-}
+//         }
+
+//     }
+//     script0.onload = cb_wrapper;
+//     script1.onload = cb_wrapper;
+//     script2.onload = cb_wrapper;
+//     document.body.appendChild(script0);
+//     document.body.appendChild(script1);
+//     document.body.appendChild(script2);
+
+// }
 
 function setSessionState(sessionState) {
 
@@ -147,10 +165,12 @@ function setSessionState(sessionState) {
         case SessionState.LOBBY:
             register_div.classList.add("invisible");
             lobby_div.classList.remove("invisible");
+            document.dispatchEvent(new Event("onenterlobby"));
             break;
         case SessionState.INGAME:
             lobby_div.classList.add("invisible");
             game_div.classList.remove("invisible");
+            document.dispatchEvent(new Event("onentergame"));
             break;
         case SessionState.ENDING:
 
@@ -169,20 +189,33 @@ function connect() {
 
         if (data.name && !players.find((pl) => pl.name == data.name)) {
 
-            addPlayer(data.name, data.pos, data.total);
+            addPlayer(data);
 
         }
 
     });
     socket.on("start-game", function(data) {
 
+        let color = customMaterial.diffuseColor.toHexString();
+        let texture = customMaterial.diffuseTexture.getContext().canvas.toDataURL("image/png");
+        socket.emit("player-style", {
+            "diffuseColor": color,
+            "textureDataUrl": texture
+        });
+        let localPlayer = players.find((pl) => pl.name == username);
+        localPlayer.diffuseColor = color;
+        localPlayer.textureDataUrl = texture;
         setSessionState(SessionState.INGAME);
         renderGame();
 
     });
+    socket.on("player-style", function(data) {
+
+        updatePlayerStyleLocally(data.name, data.diffuseColor, data.textureDataUrl);
+
+    });
     socket.on("update-player", function(data) {
 
-        console.log(data);
         let player = players.find((pl) => pl.name == data.name);
         if (player) {
 
@@ -202,6 +235,12 @@ onGameRendered = function() {
     let hud = document.querySelector(".hud-container");
     hud.classList.remove("invisible");
     let el = document.querySelector(".die");
+    localGhost.onWalkEnd = () => {
+    
+        let task = document.querySelector(".window.task-window"); 
+        task.classList.remove("invisible");
+
+    };
     dice = new Die(el);
     el.addEventListener("click", async() => {
 
@@ -283,22 +322,27 @@ async function checkGameState() {
             document.querySelector(".player-info > span").textContent = username;
             for (let pl of data.playerList) {
 
-                addPlayer(pl.name, pl.pos, pl.total);
+                addPlayer(pl);
         
             }
             connect();
             if (data.playerState == SessionState.LOBBY) {
 
-                loadLibraries();
+                renderPreview();
+                setSessionState(SessionState.LOBBY);
                 
             } else if (data.playerState == SessionState.INGAME) {
 
-                loadLibraries(renderGame);
+                setSessionState(SessionState.INGAME);
+                renderGame();
 
             }
 
+        } else {
+            
+            setSessionState(SessionState.UNAUTH);
+
         }
-        setSessionState(data.playerState);
 
     } catch(error) {
 
@@ -336,13 +380,13 @@ async function registerInGame() {
         document.querySelector(".player-info > span").textContent = username;
         for (let pl of data.playerList) {
 
-            addPlayer(pl.name, pl.pos, pl.total);
+            addPlayer(pl);
     
         }
-        setSessionState(SessionState.LOBBY);
         document.getElementById("game_name_1").textContent = sessionName;
+        renderPreview();
+        setSessionState(SessionState.LOBBY);
         connect();
-        setTimeout(loadLibraries, 1000);
 
     } catch(error) {
 
@@ -355,3 +399,4 @@ async function registerInGame() {
 
 document.addEventListener("DOMContentLoaded", checkGameState, false);
 confirm_input.addEventListener("click", registerInGame, false);
+

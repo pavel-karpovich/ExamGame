@@ -1,3 +1,4 @@
+"use strict"
 
 let onGameRendered = null;
 let players = [];
@@ -9,8 +10,15 @@ let v;
 function getRandomRotation() {
 
     let rndAngle = Math.random() * 2 * Math.PI;
-    return new BABYLON.Vector3( -Math.PI * 0.4, rndAngle, 0);
+    return new BABYLON.Vector3(0, rndAngle, 0);
 
+}
+
+function _updatePlayerMeshStyle(playerMesh, playerName, diffuseColor, textureDataUrl) {
+    
+    playerMesh.material.diffuseTexture = new BABYLON.Texture(textureDataUrl, playerMesh.getScene());
+    playerMesh.material.diffuseColor = BABYLON.Color3.FromHexString(diffuseColor);
+    
 }
 
 function getRandomPosition(initVec) {
@@ -45,7 +53,6 @@ function renderGame() {
             scene.activeCamera.checkCollisions = true;
             scene.activeCamera.inertia = 0.9;
             scene.activeCamera.panningInertia = 0.9;
-
 
             for (let mesh of scene.meshes) {
 
@@ -86,30 +93,36 @@ function renderGame() {
 
             BABYLON.SceneLoader.ImportMesh("", "static/assets/ghost/", "ghost.babylon", scene, function(ms) {
 
-                let ghost = ms[0];
-                console.log(ghost.skeleton);
-                ghost.visibility = 0;
-                ghost.scaling = new BABYLON.Vector3(0.03, 0.03, 0.03);
-
+                ghostMesh = ms[0];
+                ghostMesh.visibility = 0;
+                ghostMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
                 for (let player of players) {
 
-                    let playerMesh = ghost.clone("m_" + player.name);
-                    playerMesh.skeleton = ghost.skeleton.clone("s_" + player.name);
-                    playerMesh.position = getRandomPosition(cells[player.initPos - 1].mesh.position);
+                    let playerMesh = ghostMesh.clone("m_" + player.name);
+                    playerMesh.skeleton = ghostMesh.skeleton.clone("s_" + player.name);
+                    playerMesh.material = new BABYLON.StandardMaterial("m_" + player.name, scene);
+                    playerMesh.material.backFaceCulling = false;
+                    if (player.diffuseColor && player.textureDataUrl) {
+
+                        _updatePlayerMeshStyle(playerMesh, player.name, player.diffuseColor, player.textureDataUrl);
+
+                    }
+                    playerMesh.position = getRandomPosition(cells[player.pos - 1].mesh.position);
                     playerMesh.rotation = getRandomRotation();
                     playerMesh.visibility = 1;
                     playerMesh.checkCollisions = false;
-                    let idleAnim = scene.beginWeightedAnimation(playerMesh.skeleton, 90, 171, 1.0, true);
-                    let walkAnim = scene.beginWeightedAnimation(playerMesh.skeleton, 310, 339, 0.0, true);
+                    let idleAnim = scene.beginWeightedAnimation(playerMesh.skeleton, 40, 130, 1.0, true);
+                    let walkAnim = scene.beginWeightedAnimation(playerMesh.skeleton, 0, 30, 0.0, true);
 
-                    player.ghost = new Ghost(player.initPos, playerMesh, idleAnim, walkAnim);
+                    player.ghost = new Ghost(player.pos, playerMesh, idleAnim, walkAnim);
+                    player.ghost.FPS = FPS_FOR_NET;
 
-                    delete player.initPos;
+                    delete player.pos;
 
-                    let planeTexture = new BABYLON.DynamicTexture("lt_" + player.name, {height: 32, width: 128}, scene, true);
+                    let planeTexture = new BABYLON.DynamicTexture("lt_" + player.name, {width: 512, height: 64}, scene, true);
                     planeTexture.hasAlpha = true;
-                    textureContext = planeTexture.getContext();
-                    textureContext.font = "bold 32px Segoe UI";
+                    let textureContext = planeTexture.getContext();
+                    textureContext.font = "bold 38px Segoe UI";
                     let size = planeTexture.getSize();
                     textureContext.save();
                     let textSize = textureContext.measureText(player.name);
@@ -119,17 +132,16 @@ function renderGame() {
                     planeTexture.update();
 
                     let planeMaterial = new BABYLON.StandardMaterial("lm_" + player.name, scene);
-                    planeMaterial.backFaceCulling = true;
                     planeMaterial.disableLighting = true;
                     planeMaterial.diffuseTexture = planeTexture;
 
-                    let plane = BABYLON.MeshBuilder.CreatePlane("lp_" + player.name, {width: 128, height: 32}, scene);
+                    let plane = BABYLON.MeshBuilder.CreatePlane("lp_" + player.name, {width: 512, height: 64}, scene);
                     plane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
                     plane.material = planeMaterial;
                     plane.parent = playerMesh;
-                    plane.position = new BABYLON.Vector3(0, 30, 100);
+                    plane.position = new BABYLON.Vector3(0, 12, 0);
                     v = plane.position;
-                    plane.scaling = ghost.scaling;
+                    plane.scaling = new BABYLON.Vector3(0.03, 0.03, 0.03);
                     
                     
                     if (player.name == username) {
@@ -145,6 +157,7 @@ function renderGame() {
                 scene.activeCamera.useBouncingBehavior = true;
 
                 //scene.createOrUpdateSelectionOctree();
+                
 
                 for (let mat of scene.materials) {
 
@@ -181,26 +194,6 @@ function renderGame() {
             engine.runRenderLoop(function() {
 
                 scene.render();
-                for (let player of players) {
-
-                    if (player.ghost) {
-
-                        if (player.ghost.isGoing()) {
-
-                            player.ghost.deltaTime += engine.getDeltaTime();
-                            if (player.ghost.deltaTime > 1000 / player.ghost.FPS) {
-
-                                let moveWithValidThis = player.ghost.move.bind(player.ghost);
-                                setTimeout(moveWithValidThis, 1, [player.ghost.deltaTime]);
-                                player.ghost.deltaTime = 0;
-
-                            }
-
-                        }
-
-                    }
-
-                }
 
             });
 
@@ -214,4 +207,21 @@ function renderGame() {
 
     });
     
+}
+
+function updatePlayerStyleLocally(name, diffuseColor, textureDataUrl) {
+
+    let player = players.find((pl) => pl.name == name);
+    if (player) {
+
+        player.diffuseColor = diffuseColor;
+        player.textureDataUrl = textureDataUrl;
+        if (player.ghost) {
+
+            _updatePlayerMeshStyle(player.ghost.mesh, name, diffuseColor, textureDataUrl);
+
+        }
+
+    }
+
 }

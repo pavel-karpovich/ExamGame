@@ -37,6 +37,22 @@ module.exports.GameSession = class {
 
     }
 
+    getPlayersInfoWithStyle() {
+
+        return this.players.map((pl) => {
+
+            return {
+                name: pl.name,
+                pos: pl.pos,
+                total: pl.total,
+                diffuseColor: pl.color,
+                textureDataUrl: pl.textureDataUrl
+            };
+
+        });
+
+    }
+
     getPlayerById(id) {
 
         return this.players.find((pl) => pl.id == id);
@@ -90,12 +106,25 @@ module.exports.GameSession = class {
 
     }
 
-    notifyAboutNewPlayer(name, pos, total) {
+    notifyAboutNewPlayer(player) {
 
-        this.broadcast("new-player", { name, pos, total });
+        this.broadcast("new-player", { 
+            "name": player.name, 
+            "pos": player.pos, 
+            "total": player.total 
+        });
         
     }
 
+    notifyAboutPlayerStyle(player) {
+
+        this.broadcast("player-style", {
+            "name": player.name,
+            "diffuseColor": player.color,
+            "textureDataUrl": player.textureDataUrl
+        });
+
+    }
 
     broadcast(type, params, except) {
 

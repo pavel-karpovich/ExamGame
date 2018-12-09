@@ -4,11 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/static/style/list.css">
     <title>Document</title>
 </head>
 <body>
+    <div class="background-image"></div>
     <p>
         Выберите игру:
     </p>
+    <script type="text/javascript">
+
+const bg = document.querySelector(".background-image");
+const windowWidth = window.innerWidth / 5;
+const windowHeight = window.innerHeight / 5 ;
+
+bg.addEventListener("mousemove", (e) => {
+
+    const mouseX = e.clientX / windowWidth;
+    const mouseY = e.clientY / windowHeight;
+    bg.style.transform = `translate3d(-${mouseX}%, -${mouseY}%, 0)`;
+    console.log(bg.style.transform);
+
+}); 
+    </script>
 </body>
 </html>

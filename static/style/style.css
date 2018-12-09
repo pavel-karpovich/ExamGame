@@ -13,10 +13,238 @@ body {
     display: none;
 }
 
+#lobby {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+#lobby_background {
+    width: 110%;
+    height: 110%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    background: url('https://d3ui957tjb5bqd.cloudfront.net/images/screenshots/products/0/8/8905/red-rocks-park-o.jpg') no-repeat left center / cover;
+    z-index: 0;
+}
+.lobby-container {
+    display: flex;
+    height: inherit;
+}
+.left-lobby-column {
+    display: inline-block;
+    height: inherit;
+    width: 20%;
+    z-index: 1;
+}
+.right-lobby-column {
+    display: flex;
+    height: inherit;
+    width: 80%;
+    z-index: 1;
+}
+.player-image {
+    display: inline-block;
+    width: 500px;
+    background: transparent;
+}
+#fileDialog {
+    display: none;
+}
+.select-image-container {
+    width: 100%;
+}
+.select-image-container > div {
+    position: relative;
+    box-sizing: border-box;
+    background: #458DDC;
+    color: white;
+    font-size: 1.2rem;
+    width: 100%;
+    height: 100%;
+    border: 3px dashed #417EC1;
+    cursor: pointer;
+    padding: 12px 6px;
+    text-align: center;
+}
+.image-list {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: center;
+    background: #D4C09F;
+    padding: 10px;
+}
+.image-box {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    padding: 3px;
+    transition: 0.2s ease;
+}
+.image-box > img {
+    width: 100%;
+    height: 100%;
+    border: 1px solid black;
+}
+.add-image {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    justify-content: center;
+    width: 99px;
+    height: 99px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 5px dashed #458DDC;
+    cursor: pointer;
+    margin: 10px;
+}
+.add-image > div {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+.add-image > div:before {
+    content: "";
+    position: absolute;
+    background-color: #458DDC;
+    border-radius: 10px;
+    top: 0;
+    left: 50%;
+    width: 20px;
+    height: 100%;
+    margin-left: -10px;
+}
+.add-image > div:after {
+    content: "";
+    position: absolute;
+    background-color: #458DDC;
+    border-radius: 10px;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    margin-top: -10px;
+}
+.image-box:hover:not(.add-image) {
+    padding: 0;
+}
+.customize-player {
+    flex: 1;
+    position: relative;
+    width: inherit;
+    height: inherit;
+}
+.player-preview {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+.player-preview > div {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: inherit;
+    height: inherit;
+}
+.player-preview canvas {
+    display: block;
+    border-radius: 50%;
+    background: lightskyblue;
+    overflow: hidden;
+    z-index: 6;
+    -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC); /* this fixes the overflow:hidden in Chrome/Opera */
+}
+.svg-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+}
+#fat_svg {
+    display: block;
+    width: auto;
+    height: 100%;
+    z-index: 5;
+}
+.switch {
+    top: 26px;
+    left: 40px;
+    width: 180px;
+    height: 55px;
+    position: absolute;
+}
+.switch input {
+    top: 0; 
+    right: 0; 
+    bottom: 0; 
+    left: 0;
+    -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    -moz-opacity: 0;
+    opacity: 0;
+    z-index: 100;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+.switch label {
+    display: block;
+    width: 80%;
+    height: 100%;
+    position: relative;
+    background: #1F2736; /*#121823*/
+    background: linear-gradient(#121823, #161d2b);
+    border-radius: 40px;
+    box-shadow:
+        inset 0 3px 8px 1px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.2);
+        -webkit-transition: all .5s ease;
+    transition: all .5s ease;
+}
+.switch input ~ label i {
+    display: block;
+    height: 71px;
+    width: 71px;
+    position: absolute;
+    left: -8px;
+    top: -8px;
+    z-index: 2;
+    border-radius: inherit;
+    background: url("/static/images/color.svg") center center /cover;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 0 8px rgba(0,0,0,0.3),
+        0 12px 12px rgba(0,0,0,0.4);
+    -webkit-transition: all .5s ease;
+    transition: all .5s ease;
+}
+.switch input:checked ~ label i {
+    left: auto;
+    left: 63%;
+    background: url("/static/images/paint.svg") center center /cover;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 0 8px rgba(0,0,0,0.3),
+        0 8px 8px rgba(0,0,0,0.3),
+        inset -1px 0 1px #b9f3fe;
+    -webkit-transition: all .5s ease;
+    transition: all .5s ease;
+}
+
+
 div>#scene {
     width: 100%;
     height: 100%;
-    touch-action: none;
 }
 
 #game {
@@ -49,13 +277,21 @@ div>#scene {
     position: absolute;
     box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.2), 0 8px 24px 0 rgba(0, 0, 0, 0.19);
     background-color: rgba(33, 33, 33, 0.5);
-
 }
-
+.window:not(:hover) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
 .window-frame {
     height: 8%;
     cursor: pointer;
     background-color: rgba(22, 22, 22, 0.75);
+    background-size: cover;
+    transform: scale(1.1);
 }
 
 .window-content {
@@ -67,11 +303,10 @@ div>#scene {
 
 .leaderboard-window {
     right: 10px;
-    top: 300px;
+    top: 70px;
     width: 16%;
     height: 40%;
-    z-index: 5;
-
+    z-index: 4;
 }
 
 .noselect {
@@ -101,9 +336,17 @@ td {
 }
 
 .task-window {
-    left: 200px;
-    top: 200px;
+    left: 25%;
+    top: 25%;
     width: 50%;
     height: 50%;
     z-index: 6;
+}
+
+.chat-window {
+    left: 10px;
+    bottom: 10px;
+    width: 20%;
+    height: 50%;
+    z-index: 5;
 }

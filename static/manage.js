@@ -1,3 +1,4 @@
+"use strict"
 
 let start_btn = document.getElementById("start");
 let create_btn = document.getElementById("create");

@@ -17,8 +17,9 @@ const { getPath } = require("./Level");
 let gameSessions = new Array();
 
 // 30 minutes
-const PREPARING_TIME_LIMIT = 30 * 60 * 1000;
+const PREPARING_TIME_LIMIT = 2 * 60 * 60 * 1000;
 const COOKIE_AGE = 5 * 60 * 60 * 1000;
+const MAX_USERNAME_LENGTH = 30;
 
 const ManageGameState = {
     NONE: "none",
@@ -118,7 +119,7 @@ app.post("/manage/create", function(request, response) {
 
                         if (gm.state == GameState.LOBBY) {
 
-                            gameSessions = gameSession.filter((gm) => gm.id != id);
+                            gameSessions = gameSessions.filter((gm) => gm.id != id);
 
                         }
 
@@ -190,36 +191,35 @@ app.post("/game", function(request, response) {
     };
     let playerId = request.cookies[sessionId];
     let game = gameSessions.find((gm) => gm.id == sessionId);
-    responseJson.sessionName = game.name;
     if (game) {
-
+    
+        responseJson.sessionName = game.name;
         let player = game.getPlayerById(playerId);
         if (player) {
 
             responseJson.username = player.name;
-            responseJson.playerList = game.getPlayersInfo();
 
             if (game.state == GameState.LOBBY) {
                 
+                responseJson.playerList = game.getPlayersInfo();
                 responseJson.playerState = PlayerGameState.LOBBY;
 
             } else if (game.state == GameState.RUNNING) {
 
                 responseJson.playerState = PlayerGameState.INGAME;
+                responseJson.playerList = game.getPlayersInfoWithStyle();
                 
 
             }
 
-        }
+        } else {
 
-    }
-    //if (responseJson.playerState == PlayerGameState.UNAUTH) {
-    else {
-
-        if (game.state != GameState.LOBBY) {
-            
-            responseJson.error = "Game already running. Can't join.";
-            responseJson.sessionName = game.name;
+            if (game.state != GameState.LOBBY) {
+                
+                responseJson.error = "Game already running. Can't join.";
+                responseJson.sessionName = game.name;
+    
+            }
 
         }
 
@@ -239,8 +239,12 @@ app.post("/game/reg", function(request, response) {
 
             if (game.state == GameState.LOBBY) {
 
-                if (username && !game.nameIsTaken(username)) {
-
+                if (!username || username.length > MAX_USERNAME_LENGTH || game.nameIsTaken(username)) {
+                    
+                    responseJson.error = "The game is already running. Cannot join.";
+                    
+                } else {
+                    
                     do {
 
                         userId = ID();
@@ -252,15 +256,7 @@ app.post("/game/reg", function(request, response) {
 
                     response.cookie(sessionId, userId, { maxAge: COOKIE_AGE, httpOnly: true });
 
-                } else {
-
-                    responseJson.error = "Please, change the name.";
-
                 }
-
-            } else {
-
-                responseJson.error = "The game is already running. Cannot join.";
 
             }
 
@@ -335,13 +331,14 @@ io.of("game")
         let sessionId = getQueryParams(socket.handshake.headers.referer)["session"];
         let playerId = getCookie(socket.handshake.headers.cookie, sessionId);
         let game = gameSessions.find((gm) => gm.id == sessionId);
+        let player = null;
         if (game) {
 
             player = game.getPlayerById(playerId);
             if (player) {
 
                 console.log(`Player ${player.name} connected!`);
-                game.notifyAboutNewPlayer(player.name, player.pos, player.total);
+                game.notifyAboutNewPlayer(player);
                 player.socket = socket;
 
             }
@@ -355,6 +352,19 @@ io.of("game")
         socket.on("disconnect", function() {
 
             console.log("Some player disconnected!");
+
+        });
+        socket.on("player-style", function(data) {
+
+            if (!player || !data.diffuseColor || !data.textureDataUrl) {
+
+                return;
+
+            }
+            console.log("Update style for " + player.name);
+            player.textureDataUrl = data.textureDataUrl;
+            player.color = data.diffuseColor;
+            game.notifyAboutPlayerStyle(player);
 
         });
 
