@@ -56,83 +56,71 @@ for (let frame of frames) {
 
 let savedPositions = {
     "color": null,
-    "paint": null
+    "paint": { "x": 853, "y": 172 }
 };
-let picker = document.getElementById("picker");
-
-let fatSvg = document.getElementById("fat_svg");
-let svgPoint = fatSvg.createSVGPoint();
+let canvasBuffer = null;
+const picker = document.getElementById("picker");
 let initScale, initRadius, initStrokeWidth;
 let isPicking = false;
+const fatSvg = document.getElementById("fat_svg");
 
-function cursorPoint(evt){
+function getPointOnSvg(clientX, clientY){
 
-    svgPoint.x = evt.clientX;
-    svgPoint.y = evt.clientY;
+    let svgPoint = fatSvg.createSVGPoint();
+    svgPoint.x = clientX;
+    svgPoint.y = clientY;
     return svgPoint.matrixTransform(fatSvg.getScreenCTM().inverse());
 
 }
 
-function updateColor(color) {
+function updatePicker(posX, posY, color) {
 
+    picker.setAttribute("cx", posX);
+    picker.setAttribute("cy", posY)
     picker.style.fill = color;
-    updateCustomColor(color);
 
 }
 
-let circles = document.querySelectorAll(".cls-2 > circle");
-for (let circle of circles) {
-
-    circle.addEventListener("mouseover", function(e) {
-
-        if (isPicking) {
-
-            let color = window.getComputedStyle(this).fill;
-            updateColor(color);
-
-        }
-        e.stopPropagation();
-
-    });
-
-    circle.addEventListener("mousedown", function(e) {
-
-        let color = window.getComputedStyle(this).fill;
-        updateColor(color);
-        
-    });
+function extractColorFromSvgPoint(svgX, svgY) {
     
+    let pixelInfo = canvasBuffer.getContext("2d").getImageData(svgX, svgY, 1, 1).data;
+    let color = `rgba(${pixelInfo[0]}, ${pixelInfo[1]}, ${pixelInfo[2]}, ${pixelInfo[3]})`;
+    return color;
 
 }
 
-let circleGroup = document.querySelector("g.cls-2");
-circleGroup.ondragstart = preventStandardDrag;
+function pickColor(svgX, svgY) {
 
-circleGroup.onmousedown = function(e) {
+    let color = extractColorFromSvgPoint(svgX, svgY);
+    updatePicker(svgX, svgY, color);
+    updateCustomColor(color);
+}
 
-    isPicking = true;
-    let moveAt = (e) => {
+let colorHorns = document.querySelector("g.cls-2");
+colorHorns.addEventListener("mousedown", function(e) {
 
-        let loc = cursorPoint(e);
-        picker.setAttribute("cx", loc.x);
-        picker.setAttribute("cy", loc.y)
-        e.stopPropagation();
-
-    }
-    moveAt(e);
     picker.style.pointerEvents = "none";
     this.style.cursor = "pointer";
-    this.onmousemove = moveAt;
-    document.onmouseup = (e) => {
+    let svgPoint = getPointOnSvg(e.clientX, e.clientY);
+    pickColor(svgPoint.x, svgPoint.y);
+    e.stopPropagation();
 
-        isPicking = false;
-        this.onmousemove = null;
-        document.onmouseup = null;
-        picker.style.pointerEvents = "auto";
-        this.style.cursor = "crosshair";
+    this.onmousemove = function(e) {
+
+        let svgPoint = getPointOnSvg(e.clientX, e.clientY);
+        pickColor(svgPoint.x, svgPoint.y);
         e.stopPropagation();
+    
+    }
 
-    };
+});
+document.onmouseup = function(e) {
+
+    isPicking = false;
+    colorHorns.onmousemove = null;
+    picker.style.pointerEvents = "auto";
+    colorHorns.style.cursor = "crosshair";
+    e.stopPropagation();
 
 };
 
@@ -168,15 +156,17 @@ picker.addEventListener("mouseleave", function(e) {
 picker.addEventListener("mousedown", function(e) {
 
     this.style.pointerEvents = "none";
-    circleGroup.style.cursor = "pointer";
+    colorHorns.style.cursor = "pointer";
     let dummyClick = new MouseEvent("mousedown", {
         "view": e.view,
-        "bubbles": e.bubbles,
-        "cancelable": e.cancelable,
+        "bubbles": true,
+        "cancelable": false,
         "screenX": e.screenX,
         "screenY": e.screenY,
         "clientX": e.clientX,
-        "clientY": e.clientY
+        "clientY": e.clientY,
+        "offsetX": e.offsetX,
+        "offsetY": e.offsetY
     });
     document.elementFromPoint(e.clientX, e.clientY).dispatchEvent(dummyClick);
     e.stopPropagation();
@@ -213,17 +203,20 @@ lobby.addEventListener("pointermove", (e) => {
 
 document.addEventListener("onenterlobby", () => {
 
-    let randomCircleNum = Math.floor(Math.random() * 1471) + 3;
-    let randomCircle = document.getElementsByClassName("cls-" + randomCircleNum)[0];
+    let image = document.getElementById("colors");
+    canvasBuffer = document.createElement("canvas");
+    canvasBuffer.width = 1107;
+    canvasBuffer.height = 1107;
+    let ctx = canvasBuffer.getContext("2d");
+    ctx.drawImage(image, 20.5, 133.5, 1067, 948);
+    let reallyRandomPosition = { "x": 237, "y": 186 };
 
     onPreviewSceneLoad = () => {
 
-        updateColor(window.getComputedStyle(randomCircle).fill);
+        pickColor(reallyRandomPosition.x, reallyRandomPosition.y);
         addCustomImage("data:img/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAQAAQAAAABXZhYuAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAHdElNRQfiDAgBIQVqK16cAAACGUlEQVR42u3OIQEAAAACIP+f1hkWWEB6FgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYF3YIvvHeNWBhB3AAAAAElFTkSuQmCC");        
 
     };
-    picker.setAttribute("cx", randomCircle.cx.baseVal.value);
-    picker.setAttribute("cy", randomCircle.cy.baseVal.value);
     initScale = picker.getCTM().a;
     initRadius = picker.r.baseVal.value;
     initStrokeWidth = picker.style.strokeWidth;
@@ -294,7 +287,7 @@ fileDialog.addEventListener("change", function() {
     let fileReader = new FileReader();
     fileReader.onload = function(e) {
 
-        let img = addCustomImage(e.target.result);
+        addCustomImage(e.target.result);
 
     };
     fileReader.readAsDataURL(this.files[0]);
@@ -307,23 +300,13 @@ modeSwitch.addEventListener("change", function() {
     if (this.matches(':checked')) {
 
         savedPositions.color = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value };
-        if (savedPositions.paint) {
-
-            picker.setAttribute("cx", savedPositions.paint.x);
-            picker.setAttribute("cy", savedPositions.paint.y);
-
-        }
+        pickColor(savedPositions.paint.x, savedPositions.paint.y);
         stopAnimation();
 
     } else {
 
         savedPositions.paint = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value }
-        if (savedPositions.color) {
-
-            picker.setAttribute("cx", savedPositions.color.x);
-            picker.setAttribute("cy", savedPositions.color.y);
-
-        }
+        pickColor(savedPositions.color.x, savedPositions.color.y);
         startAnimation();
         
     }

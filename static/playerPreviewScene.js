@@ -101,16 +101,19 @@ function renderPreview() {
 
 function BabylonColorFromCssColor(cssColor) {
 
-    if (cssColor.startsWith("#")) {
+    if (typeof(cssColor) === "string" && cssColor.startsWith("#")) {
 
         return BABYLON.Color3.FromHexString(cssColor);
 
-    } else {
+    } else if (typeof(cssColor) === "string") {
 
         let channels = cssColor.match(/\d+/g);
         channels = channels.map((val) => parseInt(val) / 255);
         return new BABYLON.Color3(channels[0], channels[1], channels[2]);
 
+    } else {
+        
+        return BABYLON.Color3.Random();
     }
 
 }
