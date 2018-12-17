@@ -93,7 +93,7 @@ function renderGame() {
 
             BABYLON.SceneLoader.ImportMesh("", "static/assets/ghost/", "ghost.babylon", scene, function(ms) {
 
-                ghostMesh = ms[0];
+                let ghostMesh = ms[0];
                 ghostMesh.visibility = 0;
                 ghostMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
                 for (let player of players) {

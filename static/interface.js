@@ -34,11 +34,12 @@ function startCustomDrag(e) {
 
     }
     moveAt(e);
-    document.onmousemove = moveAt.bind(this);
+    let thisMoveAt = moveAt.bind(this);
+    document.addEventListener("mousemove", thisMoveAt);
 
     this.onmouseup = () => {
 
-        document.onmousemove = null;
+        document.removeEventListener("mousemove", thisMoveAt);
         this.onmouseup = null;
 
     };
@@ -54,7 +55,7 @@ for (let frame of frames) {
 }
 
 
-let savedPositions = {
+let savedPickerPos = {
     "color": null,
     "paint": { "x": 853, "y": 172 }
 };
@@ -63,6 +64,11 @@ const picker = document.getElementById("picker");
 let initScale, initRadius, initStrokeWidth;
 let isPicking = false;
 const fatSvg = document.getElementById("fat_svg");
+
+const initBrushSize = 12;
+const stroke = document.getElementById("stroke");
+const stroke_text = document.querySelector("#stroke > text");
+const strokePath = document.querySelector(".cls-3");
 
 function getPointOnSvg(clientX, clientY){
 
@@ -93,12 +99,20 @@ function pickColor(svgX, svgY) {
 
     let color = extractColorFromSvgPoint(svgX, svgY);
     updatePicker(svgX, svgY, color);
-    updateCustomColor(color);
+    switch (getEditorMode()) {
+        
+    case "color":
+        updateCustomColor(color);
+        break;
+    case "paint":
+        setBrushColor(color);
+    }
 }
 
 let colorHorns = document.querySelector("g.cls-2");
 colorHorns.addEventListener("mousedown", function(e) {
 
+    isPicking = true;
     picker.style.pointerEvents = "none";
     this.style.cursor = "pointer";
     let svgPoint = getPointOnSvg(e.clientX, e.clientY);
@@ -113,16 +127,20 @@ colorHorns.addEventListener("mousedown", function(e) {
     
     }
 
+    let onMouseUp = function(e) {
+
+        isPicking = false;
+        colorHorns.onmousemove = null;
+        document.removeEventListener("mouseup", onMouseUp);
+        picker.style.pointerEvents = "auto";
+        colorHorns.style.cursor = "crosshair";
+        e.stopPropagation();
+    
+    }
+
+    document.addEventListener("mouseup", onMouseUp);
+
 });
-document.onmouseup = function(e) {
-
-    isPicking = false;
-    colorHorns.onmousemove = null;
-    picker.style.pointerEvents = "auto";
-    colorHorns.style.cursor = "crosshair";
-    e.stopPropagation();
-
-};
 
 let pickerSelected = false;
 const selectedPickerScaleRatio = 1.2;
@@ -199,8 +217,90 @@ lobby.addEventListener("pointermove", (e) => {
     const mouseY = e.clientY / windowHeight;
     bg.style.transform = `translate3d(-${mouseX}%, -${mouseY}%, 0)`;
 
-}, true);
+});
 
+let straightWidth = null;
+let arcLength = null;
+let leftPoint = null;
+const MaxBrushSize = 60;
+function initStrokeVars() {
+
+    straightWidth = strokePath.getBBox().width;
+    arcLength = strokePath.getTotalLength();
+    leftPoint = strokePath.getPointAtLength(0);
+
+}
+function updateStrokeByWidth(newSize) {
+
+    if (newSize >= 1 && newSize <= MaxBrushSize) {
+
+        // Equasion: 62x^2 - 3x + 1 == newSize;
+        let D = 9 - 248 * (1 - newSize);
+        let x1 = (3 + (newSize == 1 ? -Math.sqrt(D) : Math.sqrt(D))) / (2 * 62);
+        let realLength = arcLength * x1;
+        let point = strokePath.getPointAtLength(realLength);
+        stroke.setAttribute("transform", `translate(${point.x - 4.5} ${point.y + 34.5})`);
+        setBrushSize(newSize);
+        let newText = Math.ceil(1.65 * newSize).toString();
+        stroke_text.innerHTML = newText;
+        stroke_text.setAttribute("x", newText.length == 1 ? -5.5 : -11);
+    }
+}
+
+function updateStrokeWidthByXPos(clientX) {
+
+    let svgCoords = getPointOnSvg(clientX, 0);
+    let posRelStrokeBox = svgCoords.x - leftPoint.x;
+    if (posRelStrokeBox <= 0) {
+
+        updateStrokeByWidth(1);
+
+    } else if (posRelStrokeBox >= straightWidth) {
+
+        updateStrokeByWidth(MaxBrushSize);
+    }
+    else {
+
+        let realLength = arcLength * posRelStrokeBox / straightWidth;
+        let x = realLength / arcLength;
+        // Equasion: 62x^2 - 3x + 1; where D(y) = [0;1] and E(y) = [1;60]
+        let f_x = 62 * (x ** 2) - 3 * x + 1;
+        let point = strokePath.getPointAtLength(realLength);
+        stroke.setAttribute("transform", `translate(${point.x - 4.5} ${point.y + 34.5})`);
+        setBrushSize(f_x);
+        let newText = Math.ceil(1.65 * f_x).toString();
+        stroke_text.innerHTML = newText;
+        stroke_text.setAttribute("x", newText.length == 1 ? -5.5 : -11);
+    }
+
+}
+
+let strokeMoving = false;
+let strokeChangeClick = function(e) {
+
+    strokeMoving = true;
+
+    let move = function(e) {
+
+        updateStrokeWidthByXPos(e.clientX);
+
+    }
+    move(e);
+    document.addEventListener("mousemove", move);
+
+    let onMouseUp = function(e) {
+
+        strokeMoving = false;
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", onMouseUp);
+    }
+    document.addEventListener("mouseup", onMouseUp);
+
+}
+
+stroke.onmousedown = strokeChangeClick;
+strokePath.onmousedown = strokeChangeClick;
+ 
 document.addEventListener("onenterlobby", () => {
 
     let image = document.getElementById("colors");
@@ -219,7 +319,10 @@ document.addEventListener("onenterlobby", () => {
     };
     initScale = picker.getCTM().a;
     initRadius = picker.r.baseVal.value;
+
     initStrokeWidth = picker.style.strokeWidth;
+    initStrokeVars();
+    updateStrokeByWidth(initBrushSize);
 
     fitCanvasSize();
 
@@ -294,20 +397,25 @@ fileDialog.addEventListener("change", function() {
 
 }, false);
 
+let strokeWidthGroup = document.getElementById("hl2");
 let modeSwitch = document.querySelector(".switch > input[type='checkbox']");
 modeSwitch.addEventListener("change", function() {
 
-    if (this.matches(':checked')) {
+    if (this.matches(':checked') && getEditorMode() == "color") {
 
-        savedPositions.color = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value };
-        pickColor(savedPositions.paint.x, savedPositions.paint.y);
-        stopAnimation();
+        savedPickerPos.color = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value };
+        setPaintingMode();
+        pickColor(savedPickerPos.paint.x, savedPickerPos.paint.y);
+        strokeWidthGroup.style.transition = "opacity 1s ease-in-out";
+        strokeWidthGroup.style.opacity = 1;
 
-    } else {
+    } else if (getEditorMode() == "paint") {
 
-        savedPositions.paint = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value }
-        pickColor(savedPositions.color.x, savedPositions.color.y);
-        startAnimation();
+        savedPickerPos.paint = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value }
+        setColoringMode();
+        pickColor(savedPickerPos.color.x, savedPickerPos.color.y);
+        strokeWidthGroup.style.transition = "";
+        strokeWidthGroup.style.opacity = 0;
         
     }
 });

@@ -26,6 +26,7 @@ body {
     position: absolute;
     background: url('https://d3ui957tjb5bqd.cloudfront.net/images/screenshots/products/0/8/8905/red-rocks-park-o.jpg') no-repeat left center / cover;
     z-index: 0;
+    transition: 0.3s ease-out;
 }
 .lobby-container {
     display: flex;
@@ -291,7 +292,6 @@ div>#scene {
     cursor: pointer;
     background-color: rgba(22, 22, 22, 0.75);
     background-size: cover;
-    transform: scale(1.1);
 }
 
 .window-content {

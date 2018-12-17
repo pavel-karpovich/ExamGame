@@ -3,31 +3,219 @@
 let previewMesh = null;
 let customMaterial = null;
 let maskImage = null;
+let scene = null;
+let camera = null;
 
 const textureSize = 1024;
+const canvas = document.querySelector(".player-preview canvas");
 
 let onPreviewSceneLoad = null;
 
-function startAnimation() {
+let _editorMode = "color";
 
-    previewMesh.beginAnimation("idle", true);
+let savedCameraPos = {
+    "color": null,
+    "paint": null
+}
+
+function getEditorMode() {
+
+    return _editorMode;
 
 }
 
-function stopAnimation() {
 
-    previewMesh.getScene().stopAnimation(previewMesh);
+let _brushColor = "black";
+let _brushSize = 0;
+
+function setBrushColor(newColor) {
+
+    if (typeof(newColor) == "string") {
+
+        _brushColor = newColor;
+
+    }
+
+}
+
+function setBrushSize(newSize) {
+
+    _brushSize = newSize;
+
+}
+
+function midPointBtw(p1, p2) {
+    
+    return {
+        x: p1.x + (p2.x - p1.x) / 2,
+        y: p1.y + (p2.y - p1.y) / 2
+    };
+
+}
+
+let points = [];
+
+function draw() {
+
+    let pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+    let texCoords = pickInfo.getTextureCoordinates();
+    
+
+    // if (texCoords) {
+
+    //     let ctx = customMaterial.diffuseTexture.getContext();
+    //     let centerX = texCoords.x * textureSize;
+    //     let centerY = textureSize - texCoords.y * textureSize;
+
+    //     ctx.beginPath();
+    //     ctx.arc(centerX, centerY, _brushSize, 0, 2 * Math.PI, false);
+    //     ctx.fillStyle = _brushColor;
+    //     ctx.fill();
+    //     ctx.lineWidth = 5;
+    //     ctx.strokeStyle = _brushColor;
+    //     ctx.stroke();
+
+    //     customMaterial.diffuseTexture.update();
+    // }
+    if (texCoords) {
+
+        let ctx = customMaterial.diffuseTexture.getContext();
+
+        ctx.strokeStyle = _brushColor;
+        ctx.lineWidth = _brushSize;
+        ctx.lineJoin = ctx.lineCap = 'round';
+
+        let centerX = texCoords.x * textureSize;
+        let centerY = textureSize - texCoords.y * textureSize;
+
+        points.push({ x: centerX, y: centerY });
+
+        let p1 = points[0];
+        let p2 = points[1];
+        
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+
+        for (var i = 1, len = points.length; i < len; i++) {
+
+            var midPoint = midPointBtw(p1, p2);
+            ctx.quadraticCurveTo(p1.x, p1.y, midPoint.x, midPoint.y);
+            p1 = points[i];
+            p2 = points[i+1];
+
+        }
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+        customMaterial.diffuseTexture.update();
+
+    }
+
+}
+
+let anim = null;
+function setPaintingMode() {
+
+    savedCameraPos.color.set(camera.position.x, camera.position.y, camera.position.z);
+    camera.position.set(savedCameraPos.paint.x, savedCameraPos.paint.y, savedCameraPos.paint.z);
+    camera.rebuildAnglesAndRadius();
+    if (anim) {
+        
+        anim.pause();
+        anim.goToFrame(100);
+
+    }
+    camera.lowerRadiusLimit = 2;
+    let isDrawing = false;
+    scene.onPointerDown = function(e) {
+
+        if (e.button == 0) {
+
+            camera.detachControl(canvas);
+            isDrawing = true;
+            draw();
+
+        } else if (e.button == 1) {
+
+            scene.defaultCursor = "pointer";
+        
+        } else if (e.button == 2) {
+
+            scene.defaultCursor = "move";
+
+        } 
+    }
+    scene.onPointerMove = function(e) {
+
+        if (isDrawing) {
+
+            draw();
+
+        }
+        e.stopPropagation();
+    }
+    scene.onPointerUp = function(e) {
+
+        if (e.button == 0) {
+
+            camera.attachControl(canvas);
+            isDrawing = false;
+            points.length = 0;
+
+        }
+        scene.defaultCursor = "url('/static/images/brush.png') 0 20, auto";
+    }
+    scene.defaultCursor = "url('/static/images/brush.png') 0 20, auto";
+    _editorMode = "paint";
+}
+
+function setColoringMode() {
+
+    savedCameraPos.paint.set(camera.position.x, camera.position.y, camera.position.z);
+    camera.position.set(savedCameraPos.color.x, savedCameraPos.color.y, savedCameraPos.color.z);
+    camera.rebuildAnglesAndRadius();
+    if (!anim) {
+
+        anim = previewMesh.beginAnimation("idle", true);
+    
+    } else {
+
+        anim.restart();
+
+    }
+    camera.radius = camera.upperRadiusLimit;
+    camera.lowerRadiusLimit = camera.radius;
+    scene.onPointerDown = function(e) {
+
+        if (e.button == 0 || e.button == 1) {
+
+            scene.defaultCursor = "pointer";
+
+        } else if (e.button == 2) {
+
+            scene.defaultCursor = "move";
+
+        }
+    }
+    scene.onPointerMove = null;
+    scene.onPointerUp = function(e) {
+
+        scene.defaultCursor = "";
+
+    }
+    scene.defaultCursor = "";
+    _editorMode = "color";
+
 }
 
 function renderPreview() {
 
-    let canvas = document.querySelector(".player-preview canvas");
     let engine = new BABYLON.Engine(canvas, true, null, true);
-    let scene = new BABYLON.Scene(engine);
+    scene = new BABYLON.Scene(engine);
 
     let layer = new BABYLON.Layer("", "static/images/back1.jpg", scene, true);
-    let camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 3, 18, new BABYLON.Vector3(0, 0, 0), scene);
+    camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 3, 18, new BABYLON.Vector3(0, 0, 0), scene);
     camera.lowerRadiusLimit = camera.upperRadiusLimit = camera.radius;
+    camera.wheelPrecision = 40;
     camera.attachControl(canvas, true);
 
     let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
@@ -36,10 +224,15 @@ function renderPreview() {
     BABYLON.SceneLoader.ImportMesh("", "static/assets/ghost/", "ghost.babylon", scene, function(ms) {
         
         previewMesh = ms[0];
+        previewMesh.updateFacetData();
         previewMesh.position = new BABYLON.Vector3.Zero;
         previewMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+        camera.setTarget(previewMesh.position.add(new BABYLON.Vector3(0, 4.4, 0)));
 
-        startAnimation();
+        savedCameraPos.paint = camera.position.clone();
+        savedCameraPos.color = camera.position.clone();
+        setColoringMode();
+
         let dynamicTexture = new BABYLON.DynamicTexture("preview_texture", 1024, scene);
         maskImage = new Image();
         maskImage.src = "static/assets/ghost/ghost_texture.png";
@@ -79,7 +272,6 @@ function renderPreview() {
 
         // previewMesh.material = customMaterial;
 
-        camera.setTarget(previewMesh.position.add(new BABYLON.Vector3(0, 4.4, 0)));
         engine.resize();
         
 

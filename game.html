@@ -142,12 +142,34 @@
                                         transition: transform 0.1s ease, 
                                                     stroke 0.5s ease;
                                     }
+                                    .cls-stroke {
+                                        cursor: pointer;
+                                        stroke:rgb(130,130,130);
+                                        fill: rgb(230,230,230);
+                                    }
+                                    .cls-stroke-text {
+                                        cursor: pointer;
+                                        font-size: 20px;
+                                        fill: rgb(130,130,130);
+                                    }
                                     .cls-1 {
                                         fill: none;
+                                    }
+                                    #hl1 {
+                                        shape-rendering: geometricPrecision;
                                     }
                                     .cls-2 {
                                         clip-path: url(#clip-path);
                                         cursor: crosshair;
+                                    }
+                                    .cls-3 {
+                                        stroke: rgba(225,230,233);
+                                        stroke-opacity: 0.5;
+                                        fill: none;
+                                        stroke-miterlimit: 10;
+                                        stroke-width: 20px;
+                                        stroke-linecap: round;
+                                        shape-rendering: geometricPrecision;
                                     }
                                 </style>
                                 <clipPath id="clip-path" transform="translate(-4.5 34.5)">
@@ -160,8 +182,13 @@
                                     <image id="colors" width="1067" height="948" transform="translate(20.5 133.5)" xlink:href="/static/images/horns.png"/>
                                 </g>
                             </g>
-                            <g id="hl2" data-name="hl2">
+                            <g id="hl2" data-name="hl2" style="opacity: 0;">
                                 <rect width="1107" height="1107" class="cls-1"/>
+                                <path d="M317,98S544-46,799,98" class="cls-3" transform="translate(-4.5 34.5)"/>
+                                <g id="stroke" transform="translate(-4.5 34.5)">
+                                    <circle class="cls-stroke" r="19.2" style="stroke-width:8.4;"></circle>
+                                    <text class="cls-stroke-text noselect" y="6.5" x="-10.5"></text>
+                                </g>
                             </g>
                             <circle id="picker" class="cls-x" r="19.2" style="stroke-width:8.4;stroke:rgb(130,130,130);"></circle>
                         </svg>
