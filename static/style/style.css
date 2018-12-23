@@ -24,7 +24,7 @@ body {
     left: 0;
     top: 0;
     position: absolute;
-    background: url('https://d3ui957tjb5bqd.cloudfront.net/images/screenshots/products/0/8/8905/red-rocks-park-o.jpg') no-repeat left center / cover;
+    background: url("/static/images/background1.jpg") no-repeat left center / cover;
     z-index: 0;
     transition: 0.3s ease-out;
 }
@@ -37,6 +37,28 @@ body {
     height: inherit;
     width: 20%;
     z-index: 1;
+}
+.left-lobby-column > p:first-child {
+    font-size: 2.6rem;
+    font-family: 'Lobster Two', cursive;
+    text-align: center;
+    margin: 1rem 0;
+}
+.left-lobby-column > p + p {
+    text-align: center;
+    font-size: 1.2rem;
+}
+@counter-style numeric-padded {
+    system: numeric;
+    symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F";
+} 
+.left-lobby-column > div > ol {
+    list-style-type: numeric-padded;
+    margin: 0 20%;
+    font-size: 1.3rem;
+}
+.player-name {
+    color: #458DDC;
 }
 .right-lobby-column {
     display: flex;
@@ -90,6 +112,11 @@ body {
     width: 100%;
     height: 100%;
     border: 1px solid black;
+}
+.selected-image-box {
+    -webkit-box-shadow: 0px 0px 18px 3px rgba(62,177,230,0.93);
+    -moz-box-shadow: 0px 0px 18px 3px rgba(62,177,230,0.93);
+    box-shadow: 0px 0px 18px 3px rgba(62,177,230,0.93);
 }
 .add-image {
     display: flex;
@@ -349,4 +376,85 @@ td {
     width: 20%;
     height: 50%;
     z-index: 5;
+}
+
+.chat-window > .window-content {
+    display: flex;
+    flex-flow: column nowrap;
+}
+.chat-content {
+    flex-grow: 1;
+}
+.chat-content {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    word-wrap: break-word;
+}
+.chat-feed {
+    display: flex;
+    flex-flow: column;
+}
+.chat-message {
+    width: 100%;
+    height: auto;
+}
+.chat-message > span {
+    background-color: rgba(227, 250, 95, 0.815);
+}
+.chat-message > span:after {
+    content: " :  ";
+}
+.chat-bottom {
+    box-sizing: border-box;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    height: auto;
+    background: rgba(255, 255, 255, 0.651);
+}
+.chat-text-box {
+    box-sizing: border-box;
+    height: auto;
+    width: 80%;
+    padding: 0.3vw 0 0.3vw 0.6vw;
+}
+.chat-text-box > div {
+    display: flex;
+    overflow-y: auto;
+    align-items: center;
+    height: auto;
+    max-height: 10vw;
+    border-radius: 1.4vw;
+    background-color: rgba(255, 255, 255, 0.4);
+    transition: background-color 0.3s ease-out;
+}
+.chat-text {
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    min-height: 2.2vw;
+    height: auto;
+    padding: 0.5vw 1vw 0 1vw;
+    font: 400 1vw 'Roboto', sans-serif;
+    vertical-align: middle;
+    background: transparent;
+}
+.chat-text-box > div:focus-within {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+.chat-send {
+    height: 2.2vw;
+    width: 20%;
+}
+.chat-send > svg {
+    float: right;
+    box-sizing: border-box;
+    height: 2.2vw;
+    width: 2.2vw;
+    padding: 0.1vw;
+    margin-right: 0.3vw;
+    cursor: pointer;
 }

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="static/style/style.css">
     <link rel="stylesheet" href="static/style/dice.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,400&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lobster+Two:700" rel="stylesheet">
     <title>Game</title>
 </head>
 
@@ -29,7 +30,31 @@
             <div class="window chat-window">
                 <div class="window-frame"></div>
                 <div class="window-content">
-
+                    <div class="chat-content">
+                        <div class="chat-feed"></div>
+                    </div>
+                    <div class="chat-bottom">
+                        <div class="chat-text-box">
+                            <div>
+                                <div class="chat-text" contenteditable="true"></div>
+                            </div>
+                        </div>
+                        <div class="chat-send">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220.367 299.335">
+                                <defs>
+                                    <style>
+                                        .cls-a {
+                                            fill: #0071bc;
+                                            stroke: black;
+                                            stroke-miterlimit: 10;
+                                            stroke-width: 8px;
+                                        }
+                                    </style>
+                                </defs>
+                                <path d="M380.606,257.811,209,381.286c-4.667,4.667-42.417,24.631-36.667,6.14l89.334-129.615c5.083-7.561,5-9.478,0-16.97L172.333,111.226c-5.333-17.976,32,1.757,36.667,6.424L380.606,240.841A12.034,12.034,0,0,1,380.606,257.811Z" class="cls-a" transform="translate(-167.739 -99.804)"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="window leaderboard-window">
@@ -95,12 +120,12 @@
         <div id="lobby_background"></div>
         <div class="lobby-container">
             <div class="left-lobby-column">
+                <p id="game_name_1"></p>
                 <p>
-                    Ожидание начала сессии
+                    Ожидание других участников:
                 </p>
-                <span id="game_name_1"></span>
                 <div>
-                    <ul id="player_list"></ul>
+                    <ol id="player_list"></ol>
                 </div>
             </div>
             <div class="right-lobby-column">
@@ -182,7 +207,7 @@
                                     <image id="colors" width="1067" height="948" transform="translate(20.5 133.5)" xlink:href="/static/images/horns.png"/>
                                 </g>
                             </g>
-                            <g id="hl2" data-name="hl2" style="opacity: 0;">
+                            <g id="hl2" data-name="hl2" style="display: none; opacity: 0;">
                                 <rect width="1107" height="1107" class="cls-1"/>
                                 <path d="M317,98S544-46,799,98" class="cls-3" transform="translate(-4.5 34.5)"/>
                                 <g id="stroke" transform="translate(-4.5 34.5)">

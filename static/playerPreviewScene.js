@@ -238,12 +238,6 @@ function renderPreview() {
         maskImage.src = "static/assets/ghost/ghost_texture.png";
         maskImage.onload = function() {
 
-            let ctx = dynamicTexture.getContext();
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, textureSize, textureSize);
-            ctx.drawImage(this, 0, 0);
-            dynamicTexture.update();
-
             if (onPreviewSceneLoad) {
                 
                 onPreviewSceneLoad();

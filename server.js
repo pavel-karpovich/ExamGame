@@ -351,7 +351,7 @@ io.of("game")
         }
         socket.on("disconnect", function() {
 
-            console.log("Some player disconnected!");
+            console.log((player ? player.name : "Some player") + " disconnected!");
 
         });
         socket.on("player-style", function(data) {
@@ -365,6 +365,11 @@ io.of("game")
             player.textureDataUrl = data.textureDataUrl;
             player.color = data.diffuseColor;
             game.notifyAboutPlayerStyle(player);
+
+        });
+        socket.on("message", function(data) {
+
+            game.broadcast("message", { sender: player.name, text: data.text });
 
         });
 

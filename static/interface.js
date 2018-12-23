@@ -301,18 +301,57 @@ let strokeChangeClick = function(e) {
 stroke.onmousedown = strokeChangeClick;
 strokePath.onmousedown = strokeChangeClick;
  
+let selectedImage = null;
+
+function cssSelectImage(image) {
+
+    if (selectedImage) {
+
+        selectedImage.classList.remove("selected-image-box");
+
+    }
+    selectedImage = image;
+    selectedImage.classList.add("selected-image-box");
+
+}
+
+function addCustomImage(imageUrl) {
+
+    let box = document.createElement("div");
+    box.classList.add("image-box");
+    box.classList.add("noselect");
+    let img = new Image();
+    img.src = imageUrl;
+    img.ondragstart = preventStandardDrag;
+    cssSelectImage(img);
+    img.addEventListener("click", function() {
+
+        cssSelectImage(this);
+        updateCustomTexture(this);
+
+    });
+    img.onload = function() {
+        
+        updateCustomTexture(this);
+
+    }
+    box.appendChild(img);
+    imageList.insertBefore(box, addRef);
+
+}
+
 document.addEventListener("onenterlobby", () => {
 
     let image = document.getElementById("colors");
     canvasBuffer = document.createElement("canvas");
     canvasBuffer.width = 1107;
     canvasBuffer.height = 1107;
-    let ctx = canvasBuffer.getContext("2d");
-    ctx.drawImage(image, 20.5, 133.5, 1067, 948);
-    let reallyRandomPosition = { "x": 237, "y": 186 };
 
     onPreviewSceneLoad = () => {
 
+        let ctx = canvasBuffer.getContext("2d");
+        ctx.drawImage(image, 20.5, 133.5, 1067, 948);
+        let reallyRandomPosition = { "x": 237, "y": 186 };
         pickColor(reallyRandomPosition.x, reallyRandomPosition.y);
         addCustomImage("data:img/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAQAAQAAAABXZhYuAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAHdElNRQfiDAgBIQVqK16cAAACGUlEQVR42u3OIQEAAAACIP+f1hkWWEB6FgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYF3YIvvHeNWBhB3AAAAAElFTkSuQmCC");        
 
@@ -353,28 +392,6 @@ selectImageButton.addEventListener("click", openFileDialog);
 let imageList = document.querySelector(".image-list");
 let addRef = document.querySelector(".add-image");
 
-function addCustomImage(imageUrl) {
-
-    let box = document.createElement("div");
-    box.classList.add("image-box");
-    box.classList.add("noselect");
-    let img = new Image();
-    img.src = imageUrl;
-    img.ondragstart = preventStandardDrag;
-    img.addEventListener("click", function() {
-
-        updateCustomTexture(this);
-
-    });
-    img.onload = function() {
-        
-        updateCustomTexture(this);
-
-    }
-    box.appendChild(img);
-    imageList.insertBefore(box, addRef);
-
-}
 
 let fileDialog = document.getElementById("fileDialog");
 let formats = [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".svg", ".webp"];
@@ -406,6 +423,7 @@ modeSwitch.addEventListener("change", function() {
         savedPickerPos.color = { "x": picker.cx.baseVal.value, "y": picker.cy.baseVal.value };
         setPaintingMode();
         pickColor(savedPickerPos.paint.x, savedPickerPos.paint.y);
+        strokeWidthGroup.style.display = "block";
         strokeWidthGroup.style.transition = "opacity 1s ease-in-out";
         strokeWidthGroup.style.opacity = 1;
 
@@ -416,6 +434,134 @@ modeSwitch.addEventListener("change", function() {
         pickColor(savedPickerPos.color.x, savedPickerPos.color.y);
         strokeWidthGroup.style.transition = "";
         strokeWidthGroup.style.opacity = 0;
+        strokeWidthGroup.style.display = "none"
         
     }
 });
+
+
+let chatInput = document.querySelector(".chat-text");
+let chatFeed = document.querySelector(".chat-feed");
+let sendButton = document.querySelector(".chat-send");
+
+function recieveMessage(sender, text) {
+
+    let newDiv = document.createElement("div");
+    newDiv.classList.add("chat-message");
+    let senderSpan = document.createElement("span");
+    senderSpan.innerText = sender;
+    newDiv.appendChild(senderSpan);
+    newDiv.append(text);
+    chatFeed.appendChild(newDiv);
+    console.log(newDiv);    
+}
+
+function sendMessage() {
+
+    let text = chatInput.innerHTML;
+    socket.emit("message", {
+        "text": text
+    });
+    chatInput.innerHTML = "";
+
+}
+
+sendButton.addEventListener("click", function(e) {
+
+    if (chatInput.innerHTML != "") {
+
+        sendMessage();
+
+    }
+
+});
+
+let ctrlEnter = false;
+chatInput.addEventListener("keydown", function(e) {
+
+    if (e.keyCode == 13 && e.ctrlKey) {
+
+        console.log("Ctrl + Enter");
+        ctrlEnter = true;
+        let simulatedEnterDown = new KeyboardEvent("keydown", {
+            "charCode": e.charCode,
+            "bubbles": true,
+            "cancelable": true,
+            "composed": true,
+            "isTrusted": true,
+            "code": e.code,
+            "key": e.key,
+            "keyCode": e.keyCode,
+            "location": e.location,
+            "which": e.which,
+            "sourceCapabilities": e.sourceCapabilities,
+            "view": e.view
+        });
+        let simulatedEnterPress = new KeyboardEvent("keypress", {
+            "charCode": e.charCode,
+            "bubbles": true,
+            "cancelable": true,
+            "composed": true,
+            "isTrusted": true,
+            "code": e.code,
+            "key": e.key,
+            "keyCode": e.keyCode,
+            "location": e.location,
+            "which": e.which,
+            "sourceCapabilities": e.sourceCapabilities,
+            "view": e.view
+        });
+        let simulatedEnterUp = new KeyboardEvent("keyup", {
+            "charCode": e.charCode,
+            "bubbles": true,
+            "cancelable": true,
+            "composed": true,
+            "isTrusted": true,
+            "code": e.code,
+            "key": e.key,
+            "keyCode": e.keyCode,
+            "location": e.location,
+            "which": e.which,
+            "sourceCapabilities": e.sourceCapabilities,
+            "view": e.view
+        });
+        this.dispatchEvent(simulatedEnterDown);
+        this.dispatchEvent(simulatedEnterPress);
+        this.dispatchEvent(simulatedEnterUp);
+        
+    } else if (e.keyCode == 13) {
+
+        if (!ctrlEnter) {
+        
+            console.log("Just enter down");
+            console.log(e);
+            //e.preventDefault();
+
+        } else {
+
+            console.log("Fake enter down");
+            console.log(e);
+            ctrlEnter = false;
+            sendMessage();
+
+        }
+
+    }
+
+});
+chatInput.addEventListener("keypress", function(e) {
+
+    if (e.keyCode == 13 && !e.ctrlKey) {
+
+        console.log("Enter press");
+
+    }
+})
+chatInput.addEventListener("keyup", function(e) {
+
+    if (e.keyCode == 13 && !e.ctrlKey) {
+
+        console.log("Enter up");
+
+    }
+})

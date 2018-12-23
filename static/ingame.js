@@ -70,6 +70,11 @@ function addPlayer(player) {
     list_element.appendChild(document.createTextNode(
         player.name
     ));
+    if (player.name == username) {
+
+        list_element.classList.add("player-name");
+
+    }
     list.appendChild(list_element);
 
     players.push(player);
@@ -224,6 +229,11 @@ function connect() {
             player.ghost.goby(data.path);
 
         }
+
+    });
+    socket.on("message", function(data) {
+
+        recieveMessage(data.sender, data.text);
 
     });
 
