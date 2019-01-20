@@ -10,7 +10,7 @@ const app = express();
 const server = http.Server(app);
 const io = socketIO(server);
 
-const { ID, getCookie, getQueryParams, randomDice } = require("./utils");
+const { getRandomId, getCookie, getQueryParams, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
 const { getPath } = require("./Level");
 
@@ -106,7 +106,7 @@ app.post("/manage/create", function(request, response) {
 
             do {
 
-                uniqueId = ID();
+                uniqueId = getRandomId();
 
             } while (gameSessions.find((gm) => gm.id == uniqueId));
             let game = new GameSession(uniqueId, name, lifetime);
@@ -247,7 +247,7 @@ app.post("/game/reg", function(request, response) {
                     
                     do {
 
-                        userId = ID();
+                        userId = getRandomId();
 
                     } while (game.getPlayerById(userId));
 
@@ -375,6 +375,89 @@ io.of("game")
 
     });
 
+let clientTestSocket = null;
+let sandboxSocket = null;
+const Docker = require("dockerode");
+const serverAddress = "ec2-18-202-237-165.eu-west-1.compute.amazonaws.com";
+let localDocker = new Docker({host: "127.0.0.1", port: 3000});
+
+function createContainer() {
+
+    let createOptions = {
+
+        Image: "test",
+        ExposedPorts: {
+
+            "10111/tcp:": {}
+
+        },
+        Env: [
+
+            "SERVER=" + serverAddress
+
+        ]
+    };
+    let startOptions = {
+
+        PortBindings: {
+
+            "10111/tcp": [{
+
+                "HostIP": "0.0.0.0",
+                "HostPort": "10111"
+
+            }]
+        }
+    };
+
+    localDocker.run("test", create_options=createOptions, start_options=startOptions,
+        callback=function(err, data, container) {
+
+            console.log(err);
+            console.log(data);
+            console.log(container);
+
+        }
+    );
+}
+
+io.of("test")
+.on("connection", function(socket){
+
+    console.log("client connect");
+    clientTestSocket = socket;
+    createContainer();
+    socket.on("run", function(data) {
+
+        console.log("client send RUN");
+        sandboxSocket.emit("exec");
+
+    });
+    socket.on("input", function(data) {
+
+        console.log("client send INPUT");
+        sandboxSocket.emit("i", data);
+
+    });
+
+});
+
+io.of
+.on("sandbox", function(socket) {
+
+    console.log("Wow! Sandbox socket connected!");
+    sandboxSocket = socket;
+    let sandboxHandler = function(data) {
+
+        console.log("sandbox send Output");
+        clientTestSocket.emit("output", data);
+
+    }
+    socket.on("o", sandboxHandler);
+    socket.on("e", sandboxHandler);
+    socket.on("exit", sandboxHandler);
+
+});
 
 server.listen(8081, function() {
 
@@ -384,4 +467,4 @@ server.listen(8081, function() {
 
 // TODO: just add react. Do it
 // TODO: clear game data after the preapring time is out, and game not start
-// TODO: remove player if they not connect (socket is null) too long
+// TODO: remove player if they don't connect (socket is null) too long

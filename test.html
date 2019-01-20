@@ -4,36 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="static/style/style.css">
-    <link rel="stylesheet" href="static/style/dice.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,400&amp;subset=cyrillic" rel="stylesheet"> 
     <title>Test</title>
 </head>
 <body>
-    <div id="game">
-        <div>
-            <canvas id="scene" oncontextmenu="return false;"></canvas>
-        </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <div>
+            <button id="run_button" title="Run"></button>
     </div>
-    <script src="static/cdn/cannon.js"></script>
-    <script src="static/cdn/babylon.js"></script>
-    <script src="static/cdn/babylon.manager.js"></script>
+    <div>
+        <input id="input" type="text" placeholder="Input" />
+        <button id="input_button" title="Send"></button>
+    </div>
+    <div id="output"></div>
     <script type="text/javascript">
 
-let canvas = document.getElementById("scene");
+let run_button = document.getElementById("run_button");
+let input_button = document.getElementById("input_button");
+let input = document.getElementById("input");
+let output = document.getElementById("output");
+let socket = io.connect("/test");
 
-let engine = new BABYLON.Engine(canvas, true, null, true);
+run_button.addEventListener("click", function() {
 
-BABYLON.SceneManager.LoadScene("/static/assets/", "SecondScene.babylon", engine, function(newscene) {
-
-    scene = newscene;
-    scene.executeWhenReady(function() {
-
-        engine.runRenderLoop(function() { scene.render(); });
-
-    });
+    socket.emit("run");
 
 });
+
+input_button.addEventListener("click", function() {
+
+    socket.emit("input", input.value);
+    input.value = "";
+});
+
+socket.on("output", function(data) {
+
+    let textNode = document.createTextNode(data.output);
+    output.appendChild(data.output);
+    
+});
+
     </script>
 </body>
 </html>

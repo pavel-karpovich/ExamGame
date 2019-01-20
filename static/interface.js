@@ -444,14 +444,30 @@ let chatInput = document.querySelector(".chat-text");
 let chatFeed = document.querySelector(".chat-feed");
 let sendButton = document.querySelector(".chat-send");
 
+function clickOnMessageHeader(e) {
+    
+    chatInput.append(" " + this.innerText + ", ");
+    chatInput.focus();
+    setTimeout(function() {
+        let range = document.createRange();
+        let sel = window.getSelection();
+        range.setStart(chatInput, 1);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }, 0);
+
+}
+
 function recieveMessage(sender, text) {
 
     let newDiv = document.createElement("div");
     newDiv.classList.add("chat-message");
     let senderSpan = document.createElement("span");
+    senderSpan.addEventListener("click", clickOnMessageHeader);
     senderSpan.innerText = sender;
     newDiv.appendChild(senderSpan);
-    newDiv.append(text);
+    newDiv.append(" " + text);
     chatFeed.appendChild(newDiv);
     console.log(newDiv);    
 }
@@ -542,7 +558,11 @@ chatInput.addEventListener("keydown", function(e) {
             console.log("Fake enter down");
             console.log(e);
             ctrlEnter = false;
-            sendMessage();
+            if (chatInput.innerHTML != "") {
+        
+                sendMessage();
+
+            }
 
         }
 
@@ -556,7 +576,7 @@ chatInput.addEventListener("keypress", function(e) {
         console.log("Enter press");
 
     }
-})
+});
 chatInput.addEventListener("keyup", function(e) {
 
     if (e.keyCode == 13 && !e.ctrlKey) {
@@ -564,4 +584,4 @@ chatInput.addEventListener("keyup", function(e) {
         console.log("Enter up");
 
     }
-})
+});
