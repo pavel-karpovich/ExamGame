@@ -10,11 +10,14 @@
 <body>
     <script src="/socket.io/socket.io.js"></script>
     <div>
-            <button id="run_button" title="Run"></button>
+        <button id="run_button">Run</button>
+    </div>
+    <div>
+        <textarea id="code" style="width:60%; height: 30%;"></textarea>
     </div>
     <div>
         <input id="input" type="text" placeholder="Input" />
-        <button id="input_button" title="Send"></button>
+        <button id="input_button">Send</button>
     </div>
     <div id="output"></div>
     <script type="text/javascript">
@@ -23,24 +26,47 @@ let run_button = document.getElementById("run_button");
 let input_button = document.getElementById("input_button");
 let input = document.getElementById("input");
 let output = document.getElementById("output");
-let socket = io.connect("/test");
+let code = document.getElementById("code");
+let socket = io.connect("/test", { reconnection: false });
+
+let isRunning = false;
 
 run_button.addEventListener("click", function() {
 
-    socket.emit("run");
+    if (!isRunning) {
+
+        socket.emit("run", { sourceCode: code.value });
+        run_button.textContent = "Stop";
+
+    } else {
+
+        socket.emit("stop");
+        run_button.textContent = "Run";
+
+    }
+    isRunning = !isRunning;
+
+});
+
+socket.on("end", () => {
+
+    isRunning = false;
+    run_button.textContent = "Run";
 
 });
 
 input_button.addEventListener("click", function() {
 
-    socket.emit("input", input.value);
+    socket.emit("input", { input: input.value });
     input.value = "";
 });
 
 socket.on("output", function(data) {
 
-    let textNode = document.createTextNode(data.output);
-    output.appendChild(data.output);
+    let span = document.createElement("span");
+    span.style.whiteSpace = "pre-wrap";
+    span.innerHTML = data.output;
+    output.appendChild(span);
     
 });
 

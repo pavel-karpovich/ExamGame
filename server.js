@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser")
 const bodyParser = require("body-parser");
 const http = require("http");
 const path = require("path");
+const { exec } = require("child_process");
 const socketIO = require("socket.io");
 
 const app = express();
@@ -12,6 +13,7 @@ const io = socketIO(server);
 
 const { getRandomId, getCookie, getQueryParams, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
+const { Sandbox } = require("./Sandbox");
 const { getPath } = require("./Level");
 
 let gameSessions = new Array();
@@ -376,90 +378,32 @@ io.of("game")
     });
 
 let clientTestSocket = null;
-let sandboxSocket = null;
-const Docker = require("dockerode");
-const serverAddress = "ec2-18-202-237-165.eu-west-1.compute.amazonaws.com";
-let localDocker = new Docker({host: "127.0.0.1", port: 3000});
-
-function createContainer() {
-
-    let createOptions = {
-
-        Image: "test",
-        ExposedPorts: {
-
-            "10111/tcp:": {}
-
-        },
-        Env: [
-
-            "SERVER=" + serverAddress
-
-        ]
-    };
-    let startOptions = {
-
-        PortBindings: {
-
-            "10111/tcp": [{
-
-                "HostIP": "0.0.0.0",
-                "HostPort": "10111"
-
-            }]
-        }
-    };
-
-    localDocker.run("test", create_options=createOptions, start_options=startOptions,
-        callback=function(err, data, container) {
-
-            console.log(err);
-            console.log(data);
-            console.log(container);
-
-        }
-    );
-}
+let testId = 111;
 
 io.of("test")
 .on("connection", function(socket){
 
-    console.log("client connect");
+    console.log("client connect, creating container...");
     clientTestSocket = socket;
-    createContainer();
-    socket.on("run", function(data) {
-
-        console.log("client send RUN");
-        sandboxSocket.emit("exec");
-
-    });
-    socket.on("input", function(data) {
-
-        console.log("client send INPUT");
-        sandboxSocket.emit("i", data);
-
-    });
+    sandbox = new Sandbox(testId, clientTestSocket);
 
 });
 
-io.of
-.on("sandbox", function(socket) {
+io.of("sandbox")
+.on("connection", function(socket) {
 
     console.log("Wow! Sandbox socket connected!");
-    sandboxSocket = socket;
-    let sandboxHandler = function(data) {
+    if (socket.handshake.query.id != testId) {
 
-        console.log("sandbox send Output");
-        clientTestSocket.emit("output", data);
+        console.log("Id not equals!");
+        return -1;
 
     }
-    socket.on("o", sandboxHandler);
-    socket.on("e", sandboxHandler);
-    socket.on("exit", sandboxHandler);
+    sandbox.connect(socket);
 
 });
 
-server.listen(8081, function() {
+server.listen(8081, "0.0.0.0", function() {
 
     console.log("Starting server on port 8081");
 
