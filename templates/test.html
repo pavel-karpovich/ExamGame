@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%; width: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/node_modules/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/node_modules/codemirror/addon/lint/lint.css">
+    <link rel="stylesheet" href="/node_modules/codemirror/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="/node_modules/codemirror-addon-lint-fix/dist/lint-fix.css">
+    <link rel="stylesheet" href="/node_modules/codemirror-addon-infotip/dist/infotip.css">
+    <link rel="stylesheet" href="/node_modules/mirrorsharp/mirrorsharp.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <title>Test</title>
+</head>
+<body style="height: 100%; width: 100%;">
+    <script src="/socket.io/socket.io.js"></script>
+    <div style="height: 100%; width: 100%; display: grid; grid-template-columns: 50% 50%; grid-template-rows: 60% 40%;">
+        <div id="code_container" style="grid-column: 1; grid-row: 1;">
+            <div>
+                <button id="run_button">Run</button>
+            </div>
+            <div style="height: 100%; width: 100%;">
+                <textarea id="code" style="width:100%; height: 100%;">{{ startup }}</textarea>
+            </div>
+            <style>
+                .CodeMirror {
+                    width: 100%;
+                    height: 100%;
+                }
+            </style>
+        </div>
+        <div id="console_container" style="grid-column: 1; grid-row: 2; background-color: lightblue;">
+            <div>
+                <input id="input" type="text" placeholder="Input" />
+                <button id="input_button">Send</button>
+            </div>
+            <div id="output"></div>
+        </div>
+        <div id="definition_container" style="display: flex; flex-direction: column; grid-column: 2; grid-row: 1 / span 2; background-color: bisque;">
+            <div id="markdown" style="flex-grow: 1;">{{ definition }}</div>
+            <button id="confirm_button">Confirm</button>
+        </div>
+    </div>
+    <div id="message_box" style="visibility: collapse; position: absolute; z-index: 1000; background-color: white; top: 50%; left: 50%; width: 400px; height: 200px; margin-top: -100px; margin-left: -200px;">
+        <div style="height: 80%; box-sizing: border-box; padding: 10px 20px;">
+            <div id="message_content" style="height: 100%; width: 100%; word-wrap: break-word; border: 1px solid black; border-radius: 5px;"></div>
+        </div>
+        <div style="height: 20%;">
+            <button id="message_button">OK</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
+    <script src="/node_modules/codemirror/lib/codemirror.js"></script>
+    <script src="/node_modules/codemirror/mode/clike/clike.js"></script>
+    <script src="/node_modules/codemirror/mode/mllike/mllike.js"></script>
+    <script src="/node_modules/codemirror/addon/lint/lint.js"></script>
+    <script src="/node_modules/codemirror/addon/hint/show-hint.js"></script>
+    <script src="/node_modules/codemirror-addon-lint-fix/dist/lint-fix.js"></script>
+    <script src="/node_modules/codemirror-addon-infotip/dist/infotip.js"></script>
+    <script src="/node_modules/mirrorsharp/mirrorsharp.js"></script>
+    <script type="text/javascript">
+
+let run_button = document.getElementById("run_button");
+let input_button = document.getElementById("input_button");
+let confirm_button = document.getElementById("confirm_button");
+let input = document.getElementById("input");
+let output = document.getElementById("output");
+let code = document.getElementById("code");
+let definition = document.getElementById("markdown");
+
+let message_box = document.getElementById("message_box");
+let message = document.getElementById("message_content");
+let message_button = document.getElementById("message_button");
+
+let socket = io.connect("/test", { reconnection: false });
+
+const mirror = mirrorsharp(code, {
+          serviceUrl: "ws://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp",
+          selfDebugEnabled: true,
+          language: "C#"
+});
+
+let sourceCodeDoc = mirror.getCodeMirror().getDoc();
+
+let markdownConverter = new showdown.Converter();
+let htmlMd = markdownConverter.makeHtml(definition.innerHTML);
+definition.innerHTML = htmlMd;
+
+let isRunning = false;
+
+run_button.addEventListener("click", function() {
+
+    if (!isRunning) {
+
+        socket.emit("run", { sourceCode: sourceCodeDoc.getValue() });
+        run_button.textContent = "Stop";
+
+    } else {
+
+        socket.emit("stop");
+        run_button.textContent = "Run";
+
+    }
+    isRunning = !isRunning;
+
+});
+
+socket.on("end", () => {
+
+    isRunning = false;
+    run_button.textContent = "Run";
+
+});
+
+input_button.addEventListener("click", function() {
+
+    socket.emit("input", { input: input.value });
+    input.value = "";
+
+});
+
+socket.on("output", function(data) {
+
+    let span = document.createElement("span");
+    span.style.whiteSpace = "pre-wrap";
+    span.innerHTML = data.output;
+    output.appendChild(span);
+    
+});
+
+confirm_button.addEventListener("click", function() {
+
+    socket.emit("test", { sourceCode: sourceCodeDoc.getValue() });
+
+});
+
+socket.on("result", function(data) {
+
+    if (data.status == "failed") {
+        message.innerHTML = "Неудача!\n" + data.results;
+        message_button.innerHTML = "Попробовать снова";
+
+    } else {
+        message.innerHTML = "Всё правильно!";
+        message_button.innerHTML = "Вперёд!";
+    }
+    message_box.style.visibility = "visible";
+});
+
+message_button.addEventListener("click", function() {
+
+    message_box.style.visibility = "collapse";
+
+});
+    </script>
+</body>
+</html>

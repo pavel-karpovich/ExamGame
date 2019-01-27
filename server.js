@@ -1,11 +1,14 @@
 // Dependencies
+const http = require("http");
+const path = require("path");
+const fs = require("fs");
+
 const express = require("express");
 const cookieParser = require("cookie-parser")
 const bodyParser = require("body-parser");
-const http = require("http");
-const path = require("path");
 const { exec } = require("child_process");
 const socketIO = require("socket.io");
+const mustache = require("mustache-express");
 
 const app = express();
 const server = http.Server(app);
@@ -42,7 +45,9 @@ function endGame() {
 }
 
 app.set("port", 8081);
-
+app.engine("html", mustache());
+app.set("view engine", "html");
+app.set("views", __dirname + "/templates");
 app.use(cookieParser());
 app.use(bodyParser.json());
 /*
@@ -53,13 +58,21 @@ app.use(function(req, res, next) {
   });
 */
 app.use("/static", express.static(__dirname + "/static"));
-
-
+app.use("/node_modules", express.static(__dirname + "/node_modules"));
+    
 app.get("/test", function(request, response) {
 
-    response.sendFile(path.join(__dirname, "test.html"));
+    fs.readFile(__dirname + "/task/1/startup.cs", function(err, startup) {
+
+        fs.readFile(__dirname + "/task/1/definition.md", function(err, definition) {
+
+            response.render("test.html", { startup, definition });
+
+        });
+    });
 
 });
+
 app.get("/", function(request, response) {
 
     response.sendFile(path.join(__dirname, "index.html"));
@@ -377,6 +390,7 @@ io.of("game")
 
     });
 
+
 let clientTestSocket = null;
 let testId = 111;
 
@@ -400,6 +414,9 @@ io.of("sandbox")
 
     }
     sandbox.connect(socket);
+    fs.readFile(__dirname + "/task/1/tests.cs", function(err, fileContent) {
+        sandbox.loadTests(fileContent);
+    });
 
 });
 
@@ -409,6 +426,10 @@ server.listen(8081, "0.0.0.0", function() {
 
 });
 
-// TODO: just add react. Do it
-// TODO: clear game data after the preapring time is out, and game not start
-// TODO: remove player if they don't connect (socket is null) too long
+// TODO: 
+// > add React. Just do it
+// > clear game data after the preapring time is out, and game not start
+// > remove player if they don't connect (socket is null) too long
+// > use a package manager (apt-get) in Dockerfile is a bad form
+// > what about TypeScript man?
+// > Locking and sync fs operation? No, have not heard
