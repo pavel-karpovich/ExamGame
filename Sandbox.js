@@ -23,7 +23,7 @@ module.exports.Sandbox = class {
         this.sandboxSocket = null;
         this.onTestResults = null;
 
-        this.clientSocket.on("run", function(data) {
+        this.clientSocket.on("exec", function(data) {
 
             data = data || {};
             if (this.sandboxSocket) {
@@ -38,7 +38,7 @@ module.exports.Sandbox = class {
             data = data || {};
             if (this.sandboxSocket) {
                 console.log("client send INPUT");
-                this.sandboxSocket.emit("i", { input: data.input });
+                this.sandboxSocket.emit("input", { input: data.input });
             }
     
         }.bind(this));
@@ -60,6 +60,15 @@ module.exports.Sandbox = class {
             }
         }.bind(this));
 
+        this.clientSocket.on("load-code", function(data) {
+
+            data = data || {};
+            if (this.sandboxSocket) {
+                console.log("client load source code");
+                this.sandboxSocket.emit("load-code", { sourceCode: data.sourceCode });
+            }
+        }.bind(this));
+
     }
 
     connect(sandboxSocket) {
@@ -72,7 +81,7 @@ module.exports.Sandbox = class {
 
         }.bind(this));
 
-        this.sandboxSocket.on("o", function(data) {
+        this.sandboxSocket.on("output", function(data) {
             
             data = data || {};
             console.log("sandbox send Output");
@@ -81,15 +90,15 @@ module.exports.Sandbox = class {
     
         }.bind(this));
 
-        this.sandboxSocket.on("e", function(data) {
+        this.sandboxSocket.on("error", function(data) {
             
             data = data || {};
             console.log("sandbox send Error");
-            this.clientSocket.emit("output", { output: data.error });
+            this.clientSocket.emit("error", { output: data.error });
     
         }.bind(this));
 
-        this.sandboxSocket.on("result", function(data) {
+        this.sandboxSocket.on("test-end", function(data) {
 
             console.log("receiving test results:");
             console.log(data);
@@ -97,14 +106,21 @@ module.exports.Sandbox = class {
             if (this.onTestResults) {
                 this.onTestResults(data.status, data.results);
             }
-            this.clientSocket.emit("result", { status: data.status, results: data.results });
+            this.clientSocket.emit("test-end", { status: data.status, results: data.results });
         }.bind(this));
 
-        this.sandboxSocket.on("end", function(data) {
+        this.sandboxSocket.on("exec-end", function(data) {
             
             data = data || {};
-            console.log("end...");
-            this.clientSocket.emit("end", { code: data.code });
+            console.log("execution end...");
+            this.clientSocket.emit("exec-end", { code: data.code });
+            
+        }.bind(this));
+
+        this.sandboxSocket.on("stop-end", function() {
+            
+            console.log("stop command succeed");
+            this.clientSocket.emit("stop-end");
             
         }.bind(this));
     }

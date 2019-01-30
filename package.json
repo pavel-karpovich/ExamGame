@@ -13,6 +13,7 @@
     "cookie-parser": "^1.4.3",
     "dockerode": "^2.5.8",
     "express": "^4.16.4",
+    "local-echo": "github:wavesoft/local-echo",
     "mirrorsharp": "^0.12.0",
     "mustache-express": "^1.2.8",
     "socket.io": "^2.2.0"

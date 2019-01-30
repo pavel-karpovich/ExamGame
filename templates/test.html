@@ -30,35 +30,50 @@
         <div class="window-frame"></div>
         <div class="window-content">
             <div class="task-container">
-                <div class="left-split-panel">
-                    <div class="upper-split-panel">
+                <div class="left-split-panel" style="width: calc(60% - 5px);">
+                    <div class="upper-split-panel" style="height: calc(60% - 5px);">
                         <div>
+                            <div class="run-loader" style="opacity: 0;">
+                                <div></div>
+                            </div>
                             <div id="run_button" class="noselect">
                                 <span>Запуск</span>
                                 <i class="fas fa-play"></i>
                             </div>
                         </div>
                         <div>
-                            <textarea id="code" style="width:100%; height: 100%;">{{ startup }}</textarea>
+                            <div class="chrome-bug">
+                                <textarea id="code" style="width:100%; height: 100%;">{{ startup }}</textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="vertical-splitter">
                         <span></span>
                     </div>
-                    <div class="bottom-split-panel">
+                    <div class="bottom-split-panel" style="height: calc(40% - 5px);">
                         <div>
-                            <div id="term"></div>
+                            <div id="term" oncontextmenu="return false;"></div>
+                            <div class="terminal-trash">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="horizontal-splitter">
                     <span></span>
                 </div>
-                <div class="right-split-panel">
+                <div class="right-split-panel" style="width: calc(40% - 5px);">
                     <div>
                         <div class="md-container">{{ definition }}</div>
                         <div class="buttons-container">
-                            <div id="confirm_button">Проверить</div>
+                            <div class="gears" style="opacity: 0;">
+                                <i class="fas fa-2x fa-cog spin"></i>
+                                <i class="fas fa-2x fa-cog spin-back"></i>
+                                <i class="fas fa-2x fa-cog spin"></i>
+                            </div>
+                            <div id="confirm_button">
+                                <span style="opacity: 1;">Проверить</span><span></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -87,119 +102,8 @@
     <script src="/node_modules/mirrorsharp/mirrorsharp.js"></script>
     <script src="/static/xterm_master/xterm.js"></script>
     <script src="/static/xterm_master/fit.js"></script>
+    <script src="/static/xterm_master/local-echo.js"></script>
     <script src="/static/code.js"></script>
-    <script type="text/javascript">
-        let run_button = document.getElementById("run_button");
-        let confirm_button = document.getElementById("confirm_button");
-        let output = document.getElementById("console");
-        let code = document.getElementById("code");
-        let definition = document.querySelector(".md-container");
-
-        let message_box = document.getElementById("message_box");
-        let message = document.getElementById("message_content");
-        let message_button = document.getElementById("message_button");
-
-        let socket = io.connect("/test", {
-            reconnection: false
-        });
-
-        CodeMirror.defaults.autofocus = true;
-        const mirror = mirrorsharp(code, {
-            serviceUrl: "ws://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp",
-            selfDebugEnabled: true,
-            language: "C#"
-        });
-
-        let codemirror = mirror.getCodeMirror();
-        codemirror.setOption("matchBrackets", true);
-        codemirror.setOption("autoCloseBrackets", true);
-        codemirror.setOption("lineNumbers", true);
-        codemirror.setOption("styleActiveLine", true);
-        let sourceCodeDoc = codemirror.getDoc();
-
-        let markdownConverter = new showdown.Converter();
-        let htmlMd = markdownConverter.makeHtml(definition.innerHTML);
-        definition.innerHTML = htmlMd;
-
-        let isRunning = false;
-
-        run_button.addEventListener("click", function () {
-
-            if (!isRunning) {
-
-                socket.emit("run", {
-                    sourceCode: sourceCodeDoc.getValue()
-                });
-                run_button.children[0].innerHTML = "Stop";
-                run_button.children[1].classList.remove("fa-play");
-                run_button.children[1].classList.add("fa-stop");
-
-            } else {
-
-                socket.emit("stop");
-                run_button.children[0].innerHTML = "Run";
-                run_button.children[1].classList.remove("fa-stop");
-                run_button.children[1].classList.add("fa-play");
-
-            }
-            isRunning = !isRunning;
-
-        });
-
-        socket.on("end", () => {
-
-            isRunning = false;
-            run_button.children[0].innerHTML = "Run";
-            run_button.children[1].classList.remove("fa-stop");
-            run_button.children[1].classList.add("fa-play");
-
-        });
-
-        // input_button.addEventListener("click", function () {
-
-        //     socket.emit("input", {
-        //         input: input.value
-        //     });
-        //     input.value = "";
-
-        // });
-
-        socket.on("output", function (data) {
-
-            let span = document.createElement("span");
-            span.style.whiteSpace = "pre-wrap";
-            span.innerHTML = data.output;
-            output.appendChild(span);
-
-        });
-
-        confirm_button.addEventListener("click", function () {
-
-            socket.emit("test", {
-                sourceCode: sourceCodeDoc.getValue()
-            });
-
-        });
-
-        socket.on("result", function (data) {
-
-            if (data.status == "failed") {
-                message.innerHTML = "Неудача!\n" + data.results;
-                message_button.innerHTML = "Попробовать снова";
-
-            } else {
-                message.innerHTML = "Всё правильно!";
-                message_button.innerHTML = "Вперёд!";
-            }
-            message_box.style.visibility = "visible";
-        });
-
-        message_button.addEventListener("click", function () {
-
-            message_box.style.visibility = "collapse";
-
-        });
-    </script>
 </body>
 
 </html>
