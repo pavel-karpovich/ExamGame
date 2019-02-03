@@ -1,4 +1,5 @@
 const Player = require("./Player");
+const Tasks = require("./Tasks");
 
 const GameState = {
     LOBBY : "lobby",
@@ -20,6 +21,7 @@ module.exports.GameSession = class {
         this.players = new Array();
         this.managSocket = null;
         this.state = GameState.LOBBY;
+        this.tasks = null;
 
     }
 
@@ -54,15 +56,25 @@ module.exports.GameSession = class {
     }
 
     getPlayerById(id) {
-
         return this.players.find((pl) => pl.id == id);
+    }
 
+    async getTaskForPlayer(player) {
+        return this.tasks.getTask(player.pos);
+    }
+
+    async getDefaultCodeForPlayer(player) {
+        return this.tasks.getDefaultCode(player.pos);
+    }
+
+    async loadTestsForPlayer(player) {
+
+        let tests = await this.tasks.getTests(player.pos);
+        player.sandbox.loadTests(tests);
     }
 
     nameIsTaken(username) {
-
         return this.players.find((pl) => pl.name == username);
-
     }
 
     addPlayer(id, name) {
@@ -86,10 +98,25 @@ module.exports.GameSession = class {
             return player.name;
 
         }
-        else {
-        
-            return undefined;
+        else return undefined;
+
+    }
+
+    clusterBuilder() {
+
+        let i = 0, timeout = 2000;
+        let sandboxCreationChain = () => {
+
+            console.log(`Create the Sandbox for the ${i}th Player`);
+            this.players[i].createSandbox(this.id);
+            i++;
+            if (i < this.players.length) {
+
+                setTimeout(sandboxCreationChain, timeout);
+
+            }
         }
+        setTimeout(sandboxCreationChain, timeout);
 
     }
 
@@ -97,6 +124,8 @@ module.exports.GameSession = class {
 
         this.state = GameState.RUNNING;
         this.broadcast("start-game");
+        this.tasks = new Tasks();
+        this.clusterBuilder();
 
     }
 
@@ -135,9 +164,7 @@ module.exports.GameSession = class {
                 player.socket.emit(type, params);
 
             }
-
         }
-
     }
     
 };

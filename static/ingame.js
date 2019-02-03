@@ -1,9 +1,11 @@
 "user strict"
 
 let confirm_input = document.getElementById("reg_confirm");
+let task_editor = document.querySelector(".task-window iframe");
 
 let params = (new URL(document.location)).searchParams;
 let gameSession = params.get("session");
+task_editor.src += document.location.search;
 
 let socket;
 let dice;
@@ -249,6 +251,7 @@ onGameRendered = function() {
     
         let task = document.querySelector(".window.task-window"); 
         task.classList.remove("invisible");
+        //task_editor.src = task_editor.src;
 
     };
     dice = new Die(el);
@@ -299,7 +302,6 @@ onGameRendered = function() {
     });
 
 };
-
 
 async function checkGameState() {
 
@@ -405,7 +407,6 @@ async function registerInGame() {
     }
 
 }
-
 
 document.addEventListener("DOMContentLoaded", checkGameState, false);
 confirm_input.addEventListener("click", registerInGame, false);

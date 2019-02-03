@@ -447,3 +447,7 @@ td {
     margin-right: 0.3vw;
     cursor: pointer;
 }
+.task-window iframe {
+    width: 100%;
+    height: 100%;
+}

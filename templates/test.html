@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="/node_modules/mirrorsharp/mirrorsharp.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
     <link rel="stylesheet" href="/static/style/style.css">
-    <link rel="stylesheet" href="/static/style/code.css">
+    <link rel="stylesheet" href="/static/style/test.css">
     <link rel="stylesheet" href="/static/style/misc.css">
     <link rel="stylesheet" href="/static/xterm_master/xterm.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
@@ -86,24 +86,25 @@
                     <button id="message_button">OK</button>
                 </div>
             </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
+            <script src="/node_modules/codemirror/lib/codemirror.js"></script>
+            <script src="/node_modules/codemirror/mode/clike/clike.js"></script>
+            <script src="/node_modules/codemirror/mode/mllike/mllike.js"></script>
+            <script src="/node_modules/codemirror/addon/lint/lint.js"></script>
+            <script src="/node_modules/codemirror/addon/hint/show-hint.js"></script>
+            <script src="/node_modules/codemirror-addon-lint-fix/dist/lint-fix.js"></script>
+            <script src="/node_modules/codemirror-addon-infotip/dist/infotip.js"></script>
+            <script src="/node_modules/codemirror/addon/edit/matchbrackets.js"></script>
+            <script src="/node_modules/codemirror/addon/edit/closebrackets.js"></script>
+            <script src="/node_modules/codemirror/addon/selection/active-line.js"></script>
+            <script src="/node_modules/mirrorsharp/mirrorsharp.js"></script>
+            <script src="/static/xterm_master/xterm.js"></script>
+            <script src="/static/xterm_master/fit.js"></script>
+            <script src="/static/xterm_master/local-echo.js"></script>
+            <script src="/static/test.js"></script>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
-    <script src="/node_modules/codemirror/lib/codemirror.js"></script>
-    <script src="/node_modules/codemirror/mode/clike/clike.js"></script>
-    <script src="/node_modules/codemirror/mode/mllike/mllike.js"></script>
-    <script src="/node_modules/codemirror/addon/lint/lint.js"></script>
-    <script src="/node_modules/codemirror/addon/hint/show-hint.js"></script>
-    <script src="/node_modules/codemirror-addon-lint-fix/dist/lint-fix.js"></script>
-    <script src="/node_modules/codemirror-addon-infotip/dist/infotip.js"></script>
-    <script src="/node_modules/codemirror/addon/edit/matchbrackets.js"></script>
-    <script src="/node_modules/codemirror/addon/edit/closebrackets.js"></script>
-    <script src="/node_modules/codemirror/addon/selection/active-line.js"></script>
-    <script src="/node_modules/mirrorsharp/mirrorsharp.js"></script>
-    <script src="/static/xterm_master/xterm.js"></script>
-    <script src="/static/xterm_master/fit.js"></script>
-    <script src="/static/xterm_master/local-echo.js"></script>
-    <script src="/static/code.js"></script>
+
 </body>
 
 </html>

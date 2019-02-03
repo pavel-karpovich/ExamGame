@@ -16,7 +16,7 @@ const io = socketIO(server);
 
 const { getRandomId, getCookie, getQueryParams, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
-const { Sandbox } = require("./Sandbox");
+const Sandbox = require("./Sandbox");
 const { getPath } = require("./Level");
 
 let gameSessions = new Array();
@@ -72,6 +72,26 @@ app.get("/test", function(request, response) {
 
         });
     });
+
+});
+
+app.get("/editor", async function(request, response) {
+
+    let sessionId = request.query.session;
+    let playerId = request.cookies[sessionId];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
+    
+        let player = game.getPlayerById(playerId);
+        if (player) {
+
+            let startup = await game.getDefaultCodeForPlayer(player);
+            let definition = await game.getTaskForPlayer(player);
+            response.render("editor.html", { startup, definition });
+            game.loadTestsForPlayer(player);
+
+        }
+    }
 
 });
 
@@ -355,8 +375,8 @@ io.of("game")
             if (player) {
 
                 console.log(`Player ${player.name} connected!`);
+                player.updateSocket(socket);
                 game.notifyAboutNewPlayer(player);
-                player.socket = socket;
 
             }
 
@@ -395,13 +415,14 @@ io.of("game")
 
 let clientTestSocket = null;
 let testId = 111;
+let testSandbox = null;
 
 io.of("test")
 .on("connection", function(socket){
 
     console.log("client connect, creating container...");
     clientTestSocket = socket;
-    sandbox = new Sandbox(testId, clientTestSocket);
+    testSandbox = new Sandbox(testId, 0, clientTestSocket);
 
 });
 
@@ -409,16 +430,29 @@ io.of("sandbox")
 .on("connection", function(socket) {
 
     console.log("Wow! Sandbox socket connected!");
-    if (socket.handshake.query.id != testId) {
+    let playerId = socket.handshake.query.id;
+    let sessionId = socket.handshake.query.session;
+    if (playerId == testId) {
 
-        console.log("Id not equals!");
-        return -1;
+        testSandbox.connect(socket);
+        fs.readFile(__dirname + "/task/1/tests.cs", function(err, fileContent) {
+            testSandbox.loadTests(fileContent);
+        });
 
     }
-    sandbox.connect(socket);
-    fs.readFile(__dirname + "/task/1/tests.cs", function(err, fileContent) {
-        sandbox.loadTests(fileContent);
-    });
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
+
+        player = game.getPlayerById(playerId);
+        if (player) {
+
+            player.sandbox.connect(socket);
+
+        } else {
+
+            console.log("It can't be!");
+        }
+    }
 
 });
 

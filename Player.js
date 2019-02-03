@@ -1,41 +1,39 @@
 
+const Sandbox = require("./Sandbox");
 
 class Player {
 
     constructor(id, name) {
 
         this.id = id;
-        this._position = 1;
+        this.pos = 1;
+        this.total = 0;
+        this.score = 0;
         this.name = name;
         this.socket = null;
-        this.total = 0;
-        this._color = "#FFFFFF";
+        this.color = "#FFFFFF";
         this.textureDataUrl = null;
+        this.sandbox = null;
 
     }
 
-    set pos(num) {
+    createSandbox(sessionId) {
 
-        this._position = num;
+        if (this.socket != null) {
 
+            this.sandbox = new Sandbox(this.id, sessionId, this.socket);
+
+        }
     }
 
-    get pos() {
+    updateSocket(newSocket) {
 
-        return this._position;
+        this.socket = newSocket;
+        if (this.sandbox) {
 
-    }
+            this.sandbox.updateClientSocket(this.socket);
 
-    set color(col) {
-        
-        this._color = col;
-
-    }
-
-    get color() {
-
-        return this._color;
-        
+        }
     }
     
 }

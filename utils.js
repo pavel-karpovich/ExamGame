@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 module.exports.getRandomId = function() {
 
     return "_" + Math.random().toString(36).substr(2, 9);
@@ -79,3 +81,11 @@ module.exports.randomDice = function() {
     return 1 + Math.floor(Math.random() * 6);
 
 };
+
+module.exports.readFileAsync = async function (filename) {
+    return new Promise(function(resolve, reject) {
+        fs.readFile(filename, (err, data) => {
+            err ? reject(err) : resolve(data);
+        });
+    });
+}

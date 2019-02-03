@@ -133,7 +133,8 @@ v_splitter.addEventListener("dblclick", function() {
 window.addEventListener("resize", () => term.fit());
 
 let socket = io.connect("/test", {
-    reconnection: false
+    reconnection: true,
+    reconnectionAttempts: 2
 });
 
 CodeMirror.defaults.autofocus = true;
@@ -165,23 +166,12 @@ function getDefLine() {
 
 }
 
-function execEnded() {
-
-    isRunning = false;
-    run_button.children[0].innerHTML = "Запуск";
-    run_button.children[1].classList.remove("fa-stop");
-    run_button.children[1].classList.add("fa-play");
-    run_loader.style.opacity = 0;
-    echo.println("");
-    echo.abortRead();
-
-}
-
 run_button.addEventListener("click", function () {
 
     run_button.classList.add("blocked-button");
     if (!isRunning) {
 
+        console.time("run");
         socket.emit("exec", {
             sourceCode: sourceCodeDoc.getValue()
         });
@@ -204,6 +194,20 @@ run_button.addEventListener("click", function () {
 
 });
 
+function execEnded() {
+
+    isRunning = false;
+    let elapsedTime = console.timeEnd("run");
+    console.log("Время выполения: " + elapsedTime);
+    run_button.children[0].innerHTML = "Запуск";
+    run_button.children[1].classList.remove("fa-stop");
+    run_button.children[1].classList.add("fa-play");
+    run_loader.style.opacity = 0;
+    echo.println("");
+    echo.abortRead();
+
+}
+
 socket.on("start", () => run_button.classList.remove("blocked-button"));
 
 socket.on("stop-end", () => {
@@ -220,11 +224,11 @@ socket.on("output", function (data) {
 });
 
 let dots_timer = null;
-
 confirm_button.addEventListener("click", function () {
 
     if (!isTesting) {
 
+        console.time("test");
         socket.emit("test", {
             sourceCode: sourceCodeDoc.getValue()
         });
@@ -233,7 +237,7 @@ confirm_button.addEventListener("click", function () {
         confirm_span.innerHTML = "Проверяем";
         confirm_loader.style.opacity = 1;
         dots_span.innerText = ".";
-        setInterval(function() {
+        dots_timer = setInterval(function() {
 
             switch (dots_span.innerText) {
                 case ".":
@@ -266,6 +270,10 @@ socket.on("test-end", function (data) {
         message_button.innerHTML = "Вперёд!";
 
     }
+    clearInterval(dots_timer);
+    let elapsedTime = console.time("test");
+    console.log("Время выполнения тестов: " + elapsedTime);
+    dots_span.innerText = "";
     confirm_button.classList.remove("blocked-button");
     message_box.style.visibility = "visible";
     confirm_span.innerHTML = "Проверить";
