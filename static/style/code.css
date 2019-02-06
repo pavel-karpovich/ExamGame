@@ -1,0 +1,282 @@
+.task-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    overflow: hidden;
+}
+.left-split-panel {
+    display: flex;
+    flex-flow: column;
+}
+.right-split-panel {
+    background-color: #f3f3f3;
+}
+.upper-split-panel {
+    display: flex;
+    flex-flow: column;
+    overflow: hidden;
+}
+.upper-split-panel > div:nth-child(1) {
+    background-color: white;
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-end;
+    box-shadow: inset 0 -1px 0 0 #ddd;
+    flex: 0 0 30px;
+    padding: 2px;
+    background-color: #f3f3f3;
+}
+.upper-split-panel > div:nth-child(2) {
+    flex-grow: 1;
+    position: relative;
+}
+.chrome-bug {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+.bottom-split-panel {
+    position: relative;
+    overflow: hidden;
+}
+.vertical-splitter,
+.horizontal-splitter {
+    background-color: #ddd;
+    transition: background-color .05s ease-out;
+}
+.vertical-splitter:hover,
+.horizontal-splitter:hover {
+    background-color: #bbb;
+}
+.vertical-splitter {
+    height: 10px;
+    cursor: row-resize;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.horizontal-splitter {
+    width: 10px;
+    cursor: col-resize;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.vertical-splitter > span {
+    height: 2px;
+    width: 40px;
+    border-radius: 1px;
+    background-color: #aaa;
+    transition: background-color .05s ease-out;
+}
+.horizontal-splitter > span {
+    height: 40px;
+    width: 2px;
+    border-radius: 1px;
+    background-color: #aaa;
+    transition: background-color .05s ease-out;
+}
+.vertical-splitter:hover > span,
+.horizontal-splitter:hover > span {
+    background-color: #ddd;
+}
+#run_button {
+    width: 100px;
+    height: 25px;
+    border: 2px solid #ccc;
+    background-color: #deddc0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 25px;
+    cursor: pointer;
+    color: #777;
+    font-family: 'Poiret One','Cormorant',  "Times New Roman";
+    font-size: 1rem;
+}
+#run_button:hover {
+    background-color: #d5d5d5;
+}
+.bottom-split-panel > div {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    color: white;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 8px 0 0 12px;
+}
+.xterm-viewport {
+    height: calc(100% + 10px);
+    margin-top: -8px;
+}
+.right-split-panel > div {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+.md-container {
+    flex-grow: 1;
+    padding: 20px;
+    font-family: 'Cormorant','Poiret One',  "Times New Roman";
+    font-size: 1.2rem;
+    overflow-y: auto;
+}
+.buttons-container {
+    flex: 0 0 80px;
+    box-sizing: border-box;
+    padding: 10px 0;
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-end;
+    align-items: center;
+    overflow: hidden;
+}
+.main-button {
+    width: 180px;
+    height: 55px;
+    background-color: #deddc0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 56px;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: background-color ease-out .2s;
+    color: #777;
+    font-family: 'Poiret One','Cormorant',  "Times New Roman";
+    font-size: 1.4rem;
+}
+.main-button:hover {
+    background-color: #d5d5d5;
+}
+#confirm_button.main-button {
+    margin-left: 0;
+}
+#confirm_button.blocked-button,
+#run_button.blocked-button {
+    pointer-events: none;
+    background-color: #d5d5d5;
+}
+#term {
+    height: 100%;
+}
+.terminal-trash {
+    position: absolute;
+    color: #454545;
+    right: 27px;
+    bottom: 8px;
+    cursor: pointer;
+    z-index: 80;
+    transition: color ease-in .1s,
+                transform ease .2s;
+}
+.terminal-trash:hover {
+    color: #959595;
+    transform: rotate(-10deg);
+}
+.CodeMirror {
+    height: 100%;
+    width: 100%;
+}
+.CodeMirror-linenumber {
+    padding: 0 3px 0 0;
+    width: 17px !important;
+    min-width: 17px;
+}
+.CodeMirror-matchingbracket {
+    color: unset !important;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.5);
+    border-radius: 2px;
+}
+.run-loader {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-right: 6px;
+    transition: opacity ease .5s;
+}
+.run-loader > div,
+.run-loader > div:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.run-loader > div {
+  font-size: 1.8px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 2.2em solid #ccc;
+  border-right: 2.2em solid #ccc;
+  border-bottom: 2.2em solid #ccc;
+  border-left: 2.2em solid #777;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+#confirm_button > span:nth-child(2) {
+    display: inline-block;
+    text-align: left;
+    width: 10px;
+}
+.gears {
+    box-sizing: border-box;
+    width:  120px;
+    height: 40px;
+    padding-left: 21px;
+    transition: opacity ease .5s;
+}
+.gears > i {
+    color: #888;
+    display: block;
+    float: left;
+    position: relative;
+}     
+.gears > i:nth-child(1) {
+    top: 10px;
+}        
+.gears > i:nth-child(2) {
+    left: -7px;
+}
+.gears > i:nth-child(3) {
+    left: -14px;
+    top: 10px;
+}
+.spin {
+    -webkit-animation:spin 4s linear infinite;
+    -moz-animation:spin 4s linear infinite;
+    animation:spin 4s linear infinite;
+}
+.spin-back {
+    -webkit-animation:spin-back 4s linear infinite;
+    -moz-animation:spin-back 4s linear infinite;
+    animation:spin-back 4s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+@-moz-keyframes spin-back { 100% { -moz-transform: rotate(-360deg); } }
+@-webkit-keyframes spin-back { 100% { -webkit-transform: rotate(-360deg); } }
+@keyframes spin-back { 100% { -webkit-transform: rotate(-360deg); transform:rotate(-360deg); } }

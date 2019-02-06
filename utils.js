@@ -84,7 +84,7 @@ module.exports.randomDice = function() {
 
 module.exports.readFileAsync = async function (filename) {
     return new Promise(function(resolve, reject) {
-        fs.readFile(filename, (err, data) => {
+        fs.readFile(filename, "utf8", (err, data) => {
             err ? reject(err) : resolve(data);
         });
     });

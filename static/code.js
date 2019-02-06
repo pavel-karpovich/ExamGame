@@ -18,22 +18,10 @@ let message_box = document.getElementById("message_box");
 let message = document.getElementById("message_content");
 let message_button = document.getElementById("message_button");
 
-let username = "Anatoli";
 
 let containerBox = null;
 
 Terminal.applyAddon(fit); 
-const term = new Terminal({
-    cursorBlink: true,
-    rightClickSelectsWord: true
-});
-term.open(document.getElementById("term"));
-const echo = new LocalEchoController(term);
-term.fit();
-
-echo.println("Connecting to the personal exam container....");
-echo.println(`Using username "${username}".`);
-echo.println("Authenticating with public key \"imported-openssh-key\"");
 
 let vMove = (e) => {
 
@@ -132,11 +120,6 @@ v_splitter.addEventListener("dblclick", function() {
 
 window.addEventListener("resize", () => term.fit());
 
-let socket = io.connect("/test", {
-    reconnection: true,
-    reconnectionAttempts: 2
-});
-
 CodeMirror.defaults.autofocus = true;
 const mirror = mirrorsharp(code, {
     serviceUrl: "ws://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp",
@@ -152,13 +135,16 @@ codemirror.setOption("styleActiveLine", true);
 let sourceCodeDoc = codemirror.getDoc();
 
 let markdownConverter = new showdown.Converter();
-let htmlMd = markdownConverter.makeHtml(definition.innerHTML);
-definition.innerHTML = htmlMd;
+
+function updateMd(text) {
+
+    let htmlMd = markdownConverter.makeHtml(text);
+    definition.innerHTML = htmlMd;
+
+}
 
 let isRunning = false;
 let isTesting = false;
-
-term.focus();
 
 function getDefLine() {
     
@@ -206,21 +192,6 @@ function execEnded() {
     echo.abortRead();
 
 }
-
-socket.on("start", () => run_button.classList.remove("blocked-button"));
-
-socket.on("stop-end", () => {
-    run_button.classList.remove("blocked-button");
-    execEnded();
-});
-
-socket.on("exec-end", () => execEnded());
-
-socket.on("output", function (data) {
-
-    echo.print(data.output);
-
-});
 
 let dots_timer = null;
 confirm_button.addEventListener("click", function () {
@@ -271,38 +242,63 @@ function onEndTesting() {
 
 }
 
-socket.on("start-test", () => confirm_button.classList.remove("blocked-button"));
+function onTestSuccessButtonClick() {
 
-socket.on("test-end", function (data) {
+    document.querySelector(".window.task-window").classList.add("invisible");
+    document.querySelector(".die").classList.remove("invisible");
+    this.removeEventListener("click", onTestSuccessButtonClick);
 
-    if (data.status == "failed") {
+}
 
-        message.innerHTML = "Неудача!\n" + data.results;
-        message_button.innerHTML = "Попробовать снова";
+editorSocketInit = function() {
+        
+    socket.on("start", () => run_button.classList.remove("blocked-button"));
 
-    } else {
+    socket.on("stop-end", () => {
+        run_button.classList.remove("blocked-button");
+        execEnded();
+    });
 
-        message.innerHTML = "Всё правильно!";
-        message_button.innerHTML = "Вперёд!";
+    socket.on("exec-end", () => execEnded());
 
-    }
-    message_box.style.visibility = "visible";
-    onEndTesting();
+    socket.on("output", function (data) {
 
-});
+        echo.print(data.output);
 
-socket.on("stop-test-end", function() {
+    });
+    
+    socket.on("start-test", () => confirm_button.classList.remove("blocked-button"));
 
-    confirm_button.classList.remove("blocked-button");
-    onEndTesting();
+    socket.on("test-end", function (data) {
 
-});
+        if (data.status == "failed") {
+    
+            message.innerHTML = "Неудача!\n" + data.results;
+            message_button.innerHTML = "Попробовать снова";
+    
+        } else {
+    
+            message.innerHTML = "Всё правильно!";
+            message_button.innerHTML = "Вперёд!";
+    
+        }
+        message_box.style.visibility = "visible";
+        onEndTesting();
+    
+    });
+    socket.on("stop-test-end", function() {
 
-socket.on("err", function(data) {
+        confirm_button.classList.remove("blocked-button");
+        onEndTesting();
+    
+    });
+    socket.on("err", function(data) {
 
-    console.log(data.error);
+        console.log(data.error);
 
-});
+    });
+
+}
 
 message_button.addEventListener("click", function () {
 
@@ -354,6 +350,28 @@ async function bashLoop() {
     }
 }
 
-bashLoop()
+let term = null;
+let echo = null;
+function loadTerm() {
+
+    term = new Terminal({
+        cursorBlink: true,
+        rightClickSelectsWord: true
+    });
+    term.open(document.getElementById("term"));
+    echo = new LocalEchoController(term);
+    term.fit();
+    
+
+    echo.println("Connecting to the personal exam container....");
+    echo.println(`Using username "${username}".`);
+    echo.println("Authenticating with public key \"imported-openssh-key\"");
+
+    term.focus();
+
+    bashLoop()
     .then((data) => {  })
     .catch((err) => {  });
+
+}
+

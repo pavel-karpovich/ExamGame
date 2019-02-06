@@ -1,11 +1,9 @@
 "user strict"
 
 let confirm_input = document.getElementById("reg_confirm");
-let task_editor = document.querySelector(".task-window iframe");
 
 let params = (new URL(document.location)).searchParams;
 let gameSession = params.get("session");
-task_editor.src += document.location.search;
 
 let socket;
 let dice;
@@ -99,66 +97,6 @@ function addPlayer(player) {
 
 }
 
-// function loadLibraries(callback) {
-
-//     let script0 = document.createElement("script");
-//     //script1.setAttribute("src", "https://preview.babylonjs.com/cannon.js");
-//     script0.setAttribute("src", "static/cdn/cannon.js");
-
-//     let script1 = document.createElement("script");
-//     //script1.setAttribute("src", "https://cdn.babylonjs.com/babylon.max.js");
-//     script1.setAttribute("src", "static/cdn/babylon.max.js");
-
-//     let script2 = document.createElement("script");
-//     //script2.setAttribute("src", "https://preview.babylonjs.com/loaders/babylonjs.loaders.js");
-//     script2.setAttribute("src", "static/cdn/babylonjs.loaders.js");
-
-
-//     let countLoad = 0;
-//     let countAll = 3;
-
-//     let cb_wrapper = () => {
-
-//         ++countLoad;
-//         console.log("Load round 1");
-//         if (countLoad == countAll) {
-
-//             let script3 = document.createElement("script");
-//             script3.setAttribute("src", "static/cdn/babylon.manager.js");
-
-//             countLoad = 0;
-//             countAll = 1;
-
-//             if (callback) {
-                
-//                 let cb_wrapper2 = () => {
-
-//                     console.log("Load round 2");
-//                     ++countLoad;
-//                     if (countLoad == countAll) {
-
-//                         callback();
-
-//                     }
-
-//                 }
-//                 script3.onload = cb_wrapper2;
-
-//             }
-//             document.body.appendChild(script3);
-
-//         }
-
-//     }
-//     script0.onload = cb_wrapper;
-//     script1.onload = cb_wrapper;
-//     script2.onload = cb_wrapper;
-//     document.body.appendChild(script0);
-//     document.body.appendChild(script1);
-//     document.body.appendChild(script2);
-
-// }
-
 function setSessionState(sessionState) {
 
     let register_div = document.getElementById("register");
@@ -188,6 +126,9 @@ function setSessionState(sessionState) {
     }
 
 }
+
+
+let editorSocketInit = null;
 
 function connect() {
 
@@ -239,23 +180,48 @@ function connect() {
 
     });
 
+    editorSocketInit();
+
 }
+
+let el_dice = document.querySelector(".die");
+let taskWnd = document.querySelector(".window.task-window");
+
+async function showEditor() {
+
+    taskWnd.style.opacity = 0;
+    taskWnd.classList.remove("invisible");
+    loadTerm();
+    el_dice.classList.add("invisible");
+    taskWnd.style.opacity = 1;
+    let body = {
+        sessionId: gameSession
+    };
+    let taskResponse = await fetch("game/task", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+    let taskRes = await taskResponse.json();
+    sourceCodeDoc.setValue(taskRes.startup);
+    updateMd(taskRes.definition);
+
+}
+let task_hanging = false;
 
 onGameRendered = function() {
 
     console.log("START!");
     let hud = document.querySelector(".hud-container");
     hud.classList.remove("invisible");
-    let el = document.querySelector(".die");
-    localGhost.onWalkEnd = () => {
-    
-        let task = document.querySelector(".window.task-window"); 
-        task.classList.remove("invisible");
-        //task_editor.src = task_editor.src;
-
-    };
-    dice = new Die(el);
-    el.addEventListener("click", async() => {
+    dice = new Die(el_dice);
+    if (task_hanging) {
+        showEditor();
+    }
+    el_dice.addEventListener("click", async() => {
 
         if (!localGhost.isGoing() && !dice.isRolling() && localGhost.cell != 93) {
 
@@ -277,13 +243,49 @@ onGameRendered = function() {
                 let data = await response.json();
                 if (data.dice) {
 
-                    let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
-                    alignRowInTable(row);
+                    let taskRes = null;
+                    let needLateUpdate = false;
+                    localGhost.onWalkEnd = () => {
+    
+                        let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
+                        alignRowInTable(row);
+                        taskWnd.style.opacity = 0;
+                        taskWnd.classList.remove("invisible");
+                        loadTerm();
+                        el_dice.classList.add("invisible");
+                        if (taskRes) {
+                           
+                            sourceCodeDoc.setValue(taskRes.startup);
+                            updateMd(taskRes.definition);
+
+                        } else {
+
+                            needLateUpdate = true;
+
+                        }
+                        taskWnd.style.opacity = 1;
+                
+                    }
                     dice.endRoll(data.dice, () => {
 
                         localGhost.goby(data.path);
 
                     });
+                    let taskResponse = await fetch("game/task", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    taskRes = await taskResponse.json();
+                    if (needLateUpdate) {
+
+                        sourceCodeDoc.setValue(taskRes.startup);
+                        updateMd(taskRes.definition);
+
+                    }
 
                 } else {
                     
@@ -347,6 +349,11 @@ async function checkGameState() {
 
                 setSessionState(SessionState.INGAME);
                 renderGame();
+                if (data.task) {
+                    
+                    task_hanging = true;
+
+                }
 
             }
 

@@ -50,7 +50,7 @@ class Sandbox {
         };
         ecs.runTask(params, function(err, data) {
             if (err) {
-                console.log("Error when creating ECS task:", err, err.stack);
+                console.log("err when creating ECS task:", err, err.stack);
             }
         });
 
@@ -58,6 +58,8 @@ class Sandbox {
         this.updateClientSocket(clientSocket);
         this.sandboxSocket = null;
         this.onTestResults = null;
+        this.codeIsRunning = false;
+        this.testsIsRunning = false;
 
     }
 
@@ -68,11 +70,28 @@ class Sandbox {
         this.clientSocket.on("exec", function (data) {
 
             data = data || {};
-            if (this.sandboxSocket) {
+            if (!this.sandboxSocket) {
+
+                console.log("Try to execute code, when container not running yet");
+                this.clientSocket.emit("err", {
+                    error: "Container not running"
+                });
+
+            } else if (this.codeIsRunning) {
+
+                console.log("Cannot run code un parallel!");
+                this.clientSocket.emit("err", {
+                    error: "Code is already executing"
+                });
+                this.codeIsRunning = true;
+
+            } else {
+
                 console.log("client send RUN");
                 this.sandboxSocket.emit("exec", {
                     sourceCode: data.sourceCode
                 });
+
             }
 
         }.bind(this));
@@ -80,7 +99,22 @@ class Sandbox {
         this.clientSocket.on("input", function (data) {
 
             data = data || {};
-            if (this.sandboxSocket) {
+            if (!this.sandboxSocket) {
+
+                console.log("Cannot send input, when container is off");
+                this.clientSocket.emit("err", {
+                    error: "Wow.. how did you get to that?"
+                });
+
+            } else if (!this.codeIsRunning) {
+
+                console.log("Iinput can only be proccessed if the code is running");
+                this.clientSocket.emit("err", {
+                    error: "Input can only be proccessed if the code is running"
+                });
+
+            } else {
+
                 console.log("client send INPUT");
                 this.sandboxSocket.emit("input", {
                     input: data.input
@@ -91,31 +125,98 @@ class Sandbox {
 
         this.clientSocket.on("stop", function () {
 
-            if (this.sandboxSocket) {
+            if (!this.sandboxSocket) {
+
+                console.log("Cannot send stop, when container is off");
+                this.clientSocket.emit("err", {
+                    error: "Please, stop sending 'stop' command!"
+                });
+
+            } else if (!this.codeIsRunning) {
+
+                console.log("Only a running program can be stopped");
+                this.clientSocket.emit("err", {
+                    error: "Run your code at first"
+                });
+
+            } else {
+
                 console.log("client send STOP");
                 this.sandboxSocket.emit("stop");
+
             }
+
         }.bind(this));
 
         this.clientSocket.on("test", function (data) {
 
             data = data || {};
-            if (this.sandboxSocket) {
+            if (!this.sandboxSocket) {
+
+                console.log("Container not yet connected");
+                this.clientSocket.emit("err", {
+                    error: "The container is off, what other tests?!"
+                });
+
+            } else if (this.testIsRunning) {
+
+                console.log("Unable to run tests in parallel");
+                this.clientSocket.emit("err", {
+                    error: "Wait until the end of the old tests"
+                });
+
+            } else {
+
                 console.log("client send TEST");
                 this.sandboxSocket.emit("test", {
                     sourceCode: data.sourceCode
                 });
+                this.testIsRunning = true;
+
             }
+
+        }.bind(this));
+
+        this.clientSocket.on("stop-test", function () {
+
+            if (!this.sandboxSocket) {
+
+                console.log("Can't stop tests, when even the container is off");
+                this.clientSocket.emit("err", {
+                    error: "Wait for the container to turn on"
+                });
+
+            } else if (this.testIsRunning) {
+
+                console.log("Only a running tests can be stopped");
+                this.clientSocket.emit("err", {
+                    error: "You must run tests to stop them!"
+                });
+
+            } else {
+                console.log("client send STOP TEST");
+                this.sandboxSocket.emit("stop-test");
+            }
+            
         }.bind(this));
 
         this.clientSocket.on("load-code", function (data) {
 
             data = data || {};
-            if (this.sandboxSocket) {
+            if (!this.sandboxSocket) {
+
+                console.log("Code can not be loaded to the stopped container");
+                this.clientSocket.emit("err", {
+                    error: "Wait for the container to run before loading the source code"
+                });
+
+            } else {
+
                 console.log("client load source code");
                 this.sandboxSocket.emit("load-code", {
                     sourceCode: data.sourceCode
                 });
+
             }
         }.bind(this));
 
@@ -143,11 +244,11 @@ class Sandbox {
 
         }.bind(this));
 
-        this.sandboxSocket.on("error", function (data) {
+        this.sandboxSocket.on("err", function (data) {
 
             data = data || {};
             console.log("sandbox send Error");
-            this.clientSocket.emit("error", {
+            this.clientSocket.emit("err", {
                 output: data.error
             });
 
@@ -165,6 +266,15 @@ class Sandbox {
                 status: data.status,
                 results: data.results
             });
+            this.testsIsRunning = false;
+
+        }.bind(this));
+
+        this.sandboxSocket.on("start-test", function () {
+
+            console.log("start tests...");
+            this.clientSocket.emit("start-test");
+
         }.bind(this));
 
         this.sandboxSocket.on("exec-end", function (data) {
@@ -174,6 +284,7 @@ class Sandbox {
             this.clientSocket.emit("exec-end", {
                 code: data.code
             });
+            this.codeIsRunning = false;
 
         }.bind(this));
 
@@ -181,13 +292,31 @@ class Sandbox {
 
             console.log("stop command succeed");
             this.clientSocket.emit("stop-end");
+            this.codeIsRunning = false;
 
         }.bind(this));
+
+        this.sandboxSocket.on("stop-test-end", function () {
+
+            console.log("stop test command succeed");
+            this.clientSocket.emit("stop-test-end");
+            this.testIsRunning = false;
+
+        }.bind(this));
+
     }
 
     loadTests(testsCode) {
 
-        if (testsCode && this.sandboxSocket) {
+        if (!this.sandboxSocket) {
+
+            console.log("Tests can not be loaded to the stopped container");
+            this.clientSocket.emit("err", {
+                error: "Wait for the container to run before loading the tests"
+            });
+
+        }
+        else if (testsCode) {
 
             console.log("Load tests to the sandbox");
             this.sandboxSocket.emit("load-tests", {
@@ -198,9 +327,11 @@ class Sandbox {
     }
 
     exit() {
+
         if (this.sandboxSocket) {
             this.sandboxSocket.emit("exit");
         }
+
     }
 
 }

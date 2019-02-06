@@ -53,6 +53,22 @@ for (let frame of frames) {
     frame.onmousedown = startCustomDrag;
 
 }
+let maxZIndex = 10; // windows zIndex = [10;100]
+let windows = document.querySelectorAll(".window");
+for (let window of windows) {
+
+    window.addEventListener("mousedown", function() {
+
+        if (maxZIndex == 100) {
+
+            windows.forEach((w) => w.style.zIndex = 10)
+
+        }
+        maxZIndex++;
+        this.style.zIndex = maxZIndex;
+
+    });
+}
 
 
 let savedPickerPos = {

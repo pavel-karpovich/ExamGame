@@ -64,9 +64,9 @@ app.use("/node_modules", express.static(__dirname + "/node_modules"));
     
 app.get("/test", function(request, response) {
 
-    fs.readFile(__dirname + "/task/1/startup.cs", function(err, startup) {
+    fs.readFile(__dirname + "/task/1/startup.cs", "utf8", function(err, startup) {
 
-        fs.readFile(__dirname + "/task/1/definition.md", function(err, definition) {
+        fs.readFile(__dirname + "/task/1/definition.md", "utf8", function(err, definition) {
 
             response.render("test.html", { startup, definition });
 
@@ -86,6 +86,7 @@ app.get("/editor", async function(request, response) {
         if (player) {
 
             let startup = await game.getDefaultCodeForPlayer(player);
+            console.log(startup);
             let definition = await game.getTaskForPlayer(player);
             response.render("editor.html", { startup, definition });
             game.loadTestsForPlayer(player);
@@ -245,7 +246,7 @@ app.post("/game", function(request, response) {
 
                 responseJson.playerState = PlayerGameState.INGAME;
                 responseJson.playerList = game.getPlayersInfoWithStyle();
-                
+                responseJson.task = !player.completeTask;
 
             }
 
@@ -314,24 +315,50 @@ app.post("/game/dice", function(request, response) {
         let player = game.getPlayerById(playerId);
         if (player) {
             
-            let dice = randomDice();
-            let path = getPath(player.pos, dice);
-            player.pos = path[path.length - 1];
-            
-            ++player.total;
-            game.updatePlayerPositionAndStats(player.name, path, player.total);
+            if (player.completeTask) {
+                
+                let dice = randomDice();
+                let path = getPath(player.pos, dice);
+                player.pos = path[path.length - 1];
+                
+                ++player.total;
+                game.updatePlayerPositionAndStats(player.name, path, player.total);
 
-            responseJson.dice = dice;
-            responseJson.total = player.total;
-            responseJson.path = path;
-            
+                player.completeTask = false;
+                responseJson.dice = dice;
+                responseJson.total = player.total;
+                responseJson.path = path;
+
+            } else {
+
+                console.log(`Player ${playerId} try to cheat!`);
+                responseJson.error = "You must complete the task!";
+
+            }
         }
-
     }
     response.json(responseJson);
 
 });
+app.post("/game/task", async function(request, response) {
+    
+    let responseJson = {};
+    let sessionId = request.body.sessionId;
+    let playerId = request.cookies[sessionId];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game) {
 
+        let player = game.getPlayerById(playerId);
+        if (player) {
+
+            responseJson.startup = await game.getDefaultCodeForPlayer(player);
+            responseJson.definition = await game.getTaskForPlayer(player);
+            game.loadTestsForPlayer(player);
+
+        }
+    }
+    response.json(responseJson);
+});
 app.use(function(reqest, response, next) {
 
     response.status(404).sendFile(path.join(__dirname, "404.html"));
