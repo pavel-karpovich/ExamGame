@@ -250,6 +250,7 @@ function onEndTesting() {
 
 function onTestSuccessButtonClick() {
 
+    leave_button.classList.add("invisible");
     document.querySelector(".window.task-window").classList.add("invisible");
     document.querySelector(".die").classList.remove("invisible");
     this.removeEventListener("click", onTestSuccessButtonClick);
