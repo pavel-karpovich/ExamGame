@@ -14,9 +14,9 @@ let confirm_loader = document.querySelector(".gears");
 let code = document.getElementById("code");
 let trash = document.querySelector(".terminal-trash");
 let definition = document.querySelector(".md-container");
-let message_box = document.getElementById("message_box");
-let message = document.getElementById("message_content");
-let message_button = document.getElementById("message_button");
+let test_result_box = document.getElementById("#test_result");
+let test_result_message = document.querySelector("#test_result .message-content")
+let test_result_button = document.querySelector("#test_result .message-button");
 
 
 let containerBox = null;
@@ -250,6 +250,49 @@ function onTestSuccessButtonClick() {
 
 }
 
+
+test_result_button.addEventListener("click", function () {
+
+    test_result_box.classList.add("invisible");
+
+});
+
+let leave_button = document.getElementById("leave_button");
+let leave_box = document.getElementById("leave_confirm");
+let leave_yes = document.getElementById("leave_yes");
+let leave_no = document.getElementById("leave_no");
+
+leave_button.addEventListener("click", function() {
+
+    leave_box.classList.remove("invisible");
+
+});
+
+leave_yes.addEventListener("click", function() {
+
+    leave_box.classList.add("invisible");
+    leave_button.classList.add("invisible");
+    socket.emit("leave");
+    document.querySelector(".window.task-window").classList.add("invisible");
+    document.querySelector(".die").classList.remove("invisible");
+
+});
+
+leave_no.addEventListener("click", function() {
+
+    leave_box.classList.add("invisible");
+
+});
+
+function showLeaveButton() {
+
+    console.log("Now you can leave this task");
+    leave_button.style.opacity = 0;
+    leave_button.classList.remove("invisible");
+    leave_button.style.opacity = 1;
+
+}
+
 editorSocketInit = function() {
         
     socket.on("start", () => run_button.classList.remove("blocked-button"));
@@ -273,16 +316,16 @@ editorSocketInit = function() {
 
         if (data.status == "failed") {
     
-            message.innerHTML = "Неудача!\n" + data.results;
-            message_button.innerHTML = "Попробовать снова";
+            test_result_message.innerHTML = "Неудача!\n" + data.results;
+            test_result_button.innerHTML = "Попробовать снова";
     
         } else {
     
-            message.innerHTML = "Всё правильно!";
-            message_button.innerHTML = "Вперёд!";
-    
+            test_result_message.innerHTML = "Всё правильно!";
+            test_result_button.innerHTML = "Вперёд!";
+            test_result_button.addEventListener("click", onTestSuccessButtonClick);
         }
-        message_box.style.visibility = "visible";
+        test_result_box.classList.remove("invisible");
         onEndTesting();
     
     });
@@ -297,14 +340,9 @@ editorSocketInit = function() {
         console.log(data.error);
 
     });
+    socket.on("leave", showLeaveButton);
 
 }
-
-message_button.addEventListener("click", function () {
-
-    message_box.style.visibility = "collapse";
-
-});
 
 function clear(use_defline) {
 

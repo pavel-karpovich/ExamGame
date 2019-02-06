@@ -1,6 +1,9 @@
 
 const Sandbox = require("./Sandbox");
 
+// time on 1 task execution
+const TASK_TIME = 10 * 60 * 1000; 
+
 class Player {
 
     constructor(id, name) {
@@ -16,7 +19,8 @@ class Player {
         this.textureDataUrl = null;
         this.sandbox = null;
         this.completeTask = true;
-
+        this.canLeave = false;
+        this._leaveTimer = null;
     }
 
     createSandbox(sessionId) {
@@ -26,10 +30,10 @@ class Player {
             this.sandbox = new Sandbox(this.id, sessionId, this.socket);
             this.sandbox.onTestResults = (status, results) => {
 
-                console.log(`onTestResult for user ${this.id}`);
+                console.log(`onTestResult for user ${this.name}`);
                 if (status == "passed") {
 
-                    this.completeTask = true;
+                    this.prepareToNextTask();
 
                 }
             }
@@ -44,6 +48,33 @@ class Player {
             this.sandbox.updateClientSocket(this.socket);
 
         }
+    }
+
+    startTaskTimer() {
+
+        this._leaveTimer = setTimeout(() => {
+            
+            this.canLeave = true;
+            console.log(`User ${this.name} now can leave`);
+            this.socket.emit("leave");
+
+        }, TASK_TIME);
+
+    }
+
+    prepareToNextTask() {
+
+        this.completeTask = true;
+        this.canLeave = false;
+        clearTimeout(this._leaveTimer);
+        this._leaveTimer = null;
+
+    }
+
+    leaveTask() {
+
+        this.outstanding++;
+        this.prepareToNextTask();
     }
     
 }

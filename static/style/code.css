@@ -153,6 +153,9 @@
 #confirm_button.main-button {
     margin-left: 0;
 }
+#leave_button {
+    transition: opacity ease .6s;
+}
 #confirm_button.blocked-button,
 #run_button.blocked-button {
     pointer-events: none;
@@ -280,3 +283,30 @@
 @-moz-keyframes spin-back { 100% { -moz-transform: rotate(-360deg); } }
 @-webkit-keyframes spin-back { 100% { -webkit-transform: rotate(-360deg); } }
 @keyframes spin-back { 100% { -webkit-transform: rotate(-360deg); transform:rotate(-360deg); } }
+
+.message-box {
+    position: absolute;
+    z-index: 1000;
+    background-color: white;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 200px; 
+    margin-top: -100px; 
+    margin-left: -200px;
+}
+.message-box > div:nth-child(1) {
+    height: 80%;
+    box-sizing: border-box;
+    padding: 10px 20px;
+}
+.message-content {
+    height: 100%;
+    width: 100%;
+    word-wrap: break-word;
+    border: 1px solid black;
+    border-radius: 5px;
+}
+.message-box > div:nth-child(2) {
+    height: 20%;
+}

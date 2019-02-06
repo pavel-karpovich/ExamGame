@@ -131,7 +131,7 @@
                                         <i class="fas fa-2x fa-cog spin-back"></i>
                                         <i class="fas fa-2x fa-cog spin"></i>
                                     </div>
-                                    <div id="leave_button" class="main-button">
+                                    <div id="leave_button" class="main-button invisible">
                                         <span>Пропустить</span>
                                     </div>
                                     <div id="confirm_button" class="main-button">
@@ -141,12 +141,23 @@
                             </div>
                         </div>
                     </div>
-                    <div id="message_box" style="visibility: collapse; position: absolute; z-index: 1000; background-color: white; top: 50%; left: 50%; width: 400px; height: 200px; margin-top: -100px; margin-left: -200px;">
-                        <div style="height: 80%; box-sizing: border-box; padding: 10px 20px;">
-                            <div id="message_content" style="height: 100%; width: 100%; word-wrap: break-word; border: 1px solid black; border-radius: 5px;"></div>
+                    <div id="test_result" class="message_box invisible">
+                        <div>
+                            <div class="message-content"></div>
                         </div>
-                        <div style="height: 20%;">
-                            <button id="message_button">OK</button>
+                        <div>
+                            <button class="message-button">OK</button>
+                        </div>
+                    </div>
+                    <div id="leave_confirm" class="message-box invisible">
+                        <div>
+                            <div class="message-content">
+                                Вы уверены, что хотите провалить это задание?
+                            </div>
+                        </div>
+                        <div>
+                            <button id="leave_yes" class="message-button">Уверен...</button>
+                            <button id="leave_no" class="message-button">Попробую ещё раз</button>
                         </div>
                     </div>
                 </div>

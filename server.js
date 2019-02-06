@@ -247,6 +247,7 @@ app.post("/game", function(request, response) {
                 responseJson.playerState = PlayerGameState.INGAME;
                 responseJson.playerList = game.getPlayersInfoWithStyle();
                 responseJson.task = !player.completeTask;
+                responseJson.leave = player.canLeave;
 
             }
 
@@ -354,6 +355,7 @@ app.post("/game/task", async function(request, response) {
             responseJson.startup = await game.getDefaultCodeForPlayer(player);
             responseJson.definition = await game.getTaskForPlayer(player);
             game.loadTestsForPlayer(player);
+            player.startTaskTimer();
 
         }
     }
@@ -434,6 +436,23 @@ io.of("game")
         socket.on("message", function(data) {
 
             game.broadcast("message", { sender: player.name, text: data.text });
+
+        });
+        socket.on("leave", function() {
+
+            if (player.canLeave) {
+
+                player.leaveTask();
+                console.log(`Player ${player.name} leave. Fuuuu!`);
+
+            } else {
+
+                console.log(`${player.name} try to cheat with premature leaving!`);
+                this.emit("err", {
+                    error: "You can't leave now, little dirty cheater!"
+                });
+
+            }
 
         });
 
