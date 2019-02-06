@@ -15,7 +15,7 @@ const SessionState = {
     ENDING: "ending"
 }
 
-function updateTableRow(pos, name, total) {
+function updateTableRow(pos, name, total, out) {
 
     let table = document.getElementById("lead");
     let i = 1;
@@ -28,6 +28,7 @@ function updateTableRow(pos, name, total) {
             find = true;
             row.getElementsByTagName("td")[0].innerHTML = pos;
             row.getElementsByTagName("td")[2].innerHTML = total;
+            row.getElementsByTagName("td")[3].innerHTML = out;
             break;
 
         }
@@ -92,6 +93,10 @@ function addPlayer(player) {
     let td3 = document.createElement("td");
     td3.textContent = player.total;
     tr.appendChild(td3);
+
+    let td4 = document.createElement("td");
+    td4.textContent = player.out;
+    tr.appendChild(td4);
 
     alignRowInTable(tr);
 
@@ -167,7 +172,7 @@ function connect() {
         let player = players.find((pl) => pl.name == data.name);
         if (player) {
 
-            let row = updateTableRow(data.path[data.path.length - 1], data.name, data.total);
+            let row = updateTableRow(data.path[data.path.length - 1], data.name, data.total, data.out);
             alignRowInTable(row);
             player.ghost.goby(data.path);
 
@@ -247,7 +252,7 @@ onGameRendered = function() {
                     let needLateUpdate = false;
                     localGhost.onWalkEnd = () => {
     
-                        let row = updateTableRow(data.path[data.path.length - 1], username, data.total);
+                        let row = updateTableRow(data.path[data.path.length - 1], username, data.total, data.out);
                         alignRowInTable(row);
                         taskWnd.style.opacity = 0;
                         taskWnd.classList.remove("invisible");
@@ -268,7 +273,7 @@ onGameRendered = function() {
                     }
                     dice.endRoll(data.dice, () => {
 
-                        localGhost.goby(data.path);
+                        localGhost.goby(data.path.slice());
 
                     });
                     let taskResponse = await fetch("game/task", {

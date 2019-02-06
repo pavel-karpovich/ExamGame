@@ -323,12 +323,13 @@ app.post("/game/dice", function(request, response) {
                 player.pos = path[path.length - 1];
                 
                 ++player.total;
-                game.updatePlayerPositionAndStats(player.name, path, player.total);
+                game.updatePlayerPositionAndStats(player.name, path, player.total, player.outstanding);
 
                 player.completeTask = false;
                 responseJson.dice = dice;
                 responseJson.total = player.total;
                 responseJson.path = path;
+                responseJson.out = player.outstanding;
 
             } else {
 

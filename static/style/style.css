@@ -306,7 +306,6 @@ div>#scene {
     background-color: rgba(22, 22, 22, 0.75);
     background-size: cover;
 }
-
 .window-content {
     box-sizing: border-box;
     height: 92%;
@@ -317,26 +316,26 @@ div>#scene {
 .leaderboard-window {
     right: 10px;
     top: 70px;
-    width: 16%;
+    width: 20%;
     height: 40%;
     z-index: 4;
 }
-
+.leaderboard-window > .window-content {
+    overflow-y: auto;
+}
 table {
     width: 100%;
     font-size: 0.8vw;
 }
-
 th {
     color: white;
 }
-
 th,
 td {
     text-align: center;
-    width: 30%;
+    width: 23%;
     background: rgba(32, 32, 32, 0.2);
-    padding: 1.5%;
+    padding: 1%;
 }
 
 .task-window {

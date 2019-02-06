@@ -32,7 +32,8 @@ module.exports.GameSession = class {
             return {
                 name: pl.name,
                 pos: pl.pos,
-                total: pl.total
+                total: pl.total,
+                out: pl.outstanding
             };
 
         });
@@ -47,6 +48,7 @@ module.exports.GameSession = class {
                 name: pl.name,
                 pos: pl.pos,
                 total: pl.total,
+                out: pl.outstanding,
                 diffuseColor: pl.color,
                 textureDataUrl: pl.textureDataUrl
             };
@@ -83,7 +85,12 @@ module.exports.GameSession = class {
         this.players.push(newPlayer);
         if (this.managSocket) {
 
-            this.managSocket.emit("new-player", { name,  pos: newPlayer.pos, total: newPlayer.total });
+            this.managSocket.emit("new-player", { 
+                name,
+                pos: newPlayer.pos,
+                total: newPlayer.total,
+                out: newPlayer.outstanding
+            });
 
         }
 
@@ -129,9 +136,9 @@ module.exports.GameSession = class {
 
     }
 
-    updatePlayerPositionAndStats(name, path, total) {
+    updatePlayerPositionAndStats(name, path, total, out) {
 
-        this.broadcast("update-player", { name, path, total }, name);
+        this.broadcast("update-player", { name, path, total, out }, name);
 
     }
 
@@ -140,7 +147,8 @@ module.exports.GameSession = class {
         this.broadcast("new-player", { 
             "name": player.name, 
             "pos": player.pos, 
-            "total": player.total 
+            "total": player.total,
+            "out": player.out
         });
         
     }

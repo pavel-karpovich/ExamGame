@@ -154,7 +154,7 @@
     margin-left: 0;
 }
 #leave_button {
-    transition: opacity ease .6s;
+    transition: opacity ease 1.6s;
 }
 #confirm_button.blocked-button,
 #run_button.blocked-button {

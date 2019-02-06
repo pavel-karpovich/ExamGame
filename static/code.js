@@ -118,7 +118,11 @@ v_splitter.addEventListener("dblclick", function() {
 
 });
 
-window.addEventListener("resize", () => term.fit());
+window.addEventListener("resize", () => {
+    if(term) {
+        term.fit();
+    }
+});
 
 CodeMirror.defaults.autofocus = true;
 const mirror = mirrorsharp(code, {
@@ -344,7 +348,7 @@ editorSocketInit = function() {
 
 }
 
-function clear(use_defline) {
+function clearTerminal(use_defline) {
 
     term.reset();
     if (use_defline) {
@@ -354,7 +358,7 @@ function clear(use_defline) {
 
 }
 
-trash.addEventListener("click", clear);
+trash.addEventListener("click", clearTerminal);
 
 function parseInput(input) {
 
@@ -366,7 +370,7 @@ function parseInput(input) {
     }
     else if (input == "clear") {
 
-        clear(false);
+        clearTerminal(false);
 
     }
 
@@ -392,24 +396,28 @@ let term = null;
 let echo = null;
 function loadTerm() {
 
-    term = new Terminal({
-        cursorBlink: true,
-        rightClickSelectsWord: true
-    });
-    term.open(document.getElementById("term"));
-    echo = new LocalEchoController(term);
-    term.fit();
-    
+    if (!term) {
+
+        term = new Terminal({
+            cursorBlink: true,
+            rightClickSelectsWord: true
+        });
+        term.open(document.getElementById("term"));
+        echo = new LocalEchoController(term);
+
+        bashLoop()
+        .then((data) => {  })
+        .catch((err) => {  });
+    }
+    clearTerminal(false);
 
     echo.println("Connecting to the personal exam container....");
     echo.println(`Using username "${username}".`);
     echo.println("Authenticating with public key \"imported-openssh-key\"");
 
+    echo.print(getDefLine());
     term.focus();
 
-    bashLoop()
-    .then((data) => {  })
-    .catch((err) => {  });
 
 }
 
