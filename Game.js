@@ -114,7 +114,7 @@ module.exports.GameSession = class {
         let i = 0, timeout = 2000;
         let sandboxCreationChain = () => {
 
-            console.log(`Create the Sandbox for the ${i}th Player`);
+            console.log(`Create the Sandbox for the ${i + 1}th Player`);
             this.players[i].createSandbox(this.id);
             i++;
             if (i < this.players.length) {

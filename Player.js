@@ -64,6 +64,7 @@ class Player {
 
     prepareToNextTask() {
 
+        this.sandbox.stopActivity();
         this.completeTask = true;
         this.canLeave = false;
         clearTimeout(this._leaveTimer);

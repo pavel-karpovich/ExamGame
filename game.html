@@ -97,18 +97,18 @@
                                     <div class="run-loader" style="opacity: 0;">
                                         <div></div>
                                     </div>
-                                    <div id="run_button" class="noselect">
+                                    <div id="run_button" class="noselect blocked-button">
                                         <span>Запуск</span>
                                         <i class="fas fa-play"></i>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="chrome-bug">
-                                        <textarea id="code" style="width:100%; height: 100%;">{{ startup }}</textarea>
+                                        <textarea id="code" style="width:100%; height: 100%;"></textarea>
                                     </div>
                                 </div>
                             </div>
-                            <div class="vertical-splitter">
+                            <div class="horizontal-splitter">
                                 <span></span>
                             </div>
                             <div class="bottom-split-panel" style="height: calc(40% - 5px);">
@@ -120,29 +120,29 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="horizontal-splitter">
+                        <div class="vertical-splitter">
                             <span></span>
                         </div>
                         <div class="right-split-panel" style="width: calc(40% - 5px);">
                             <div>
-                                <div class="md-container">{{ definition }}</div>
+                                <div class="md-container"></div>
                                 <div class="buttons-container">
                                     <div class="gears" style="opacity: 0;">
                                         <i class="fas fa-2x fa-cog spin"></i>
                                         <i class="fas fa-2x fa-cog spin-back"></i>
                                         <i class="fas fa-2x fa-cog spin"></i>
                                     </div>
-                                    <div id="leave_button" class="main-button invisible">
+                                    <div id="leave_button" class="main-button noselect invisible blocked-button">
                                         <span>Пропустить</span>
                                     </div>
-                                    <div id="confirm_button" class="main-button">
+                                    <div id="confirm_button" class="main-button noselect blocked-button">
                                         <span style="opacity: 1;">Проверить</span><span></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div id="test_result" class="message_box invisible">
+                    <div id="test_result" class="message-box invisible">
                         <div>
                             <div class="message-content"></div>
                         </div>

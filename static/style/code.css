@@ -50,29 +50,29 @@
     background-color: #bbb;
 }
 .vertical-splitter {
-    height: 10px;
-    cursor: row-resize;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.horizontal-splitter {
     width: 10px;
     cursor: col-resize;
     display: flex;
     justify-content: center;
     align-items: center;
 }
+.horizontal-splitter {
+    height: 10px;
+    cursor: row-resize;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .vertical-splitter > span {
-    height: 2px;
-    width: 40px;
+    height: 40px;
+    width: 2px;
     border-radius: 1px;
     background-color: #aaa;
     transition: background-color .05s ease-out;
 }
 .horizontal-splitter > span {
-    height: 40px;
-    width: 2px;
+    height: 2px;
+    width: 40px;
     border-radius: 1px;
     background-color: #aaa;
     transition: background-color .05s ease-out;

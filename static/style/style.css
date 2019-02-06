@@ -330,6 +330,9 @@ table {
 th {
     color: white;
 }
+td {
+    color: #C2C2B2;
+}
 th,
 td {
     text-align: center;

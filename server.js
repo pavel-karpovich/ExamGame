@@ -21,6 +21,7 @@ const { getPath } = require("./Level");
 
 let gameSessions = new Array();
 
+const PORT = 8081;
 // 30 minutes
 const PREPARING_TIME_LIMIT = 2 * 60 * 60 * 1000;
 const COOKIE_AGE = 5 * 60 * 60 * 1000;
@@ -44,7 +45,7 @@ function endGame() {
 
 }
 
-app.set("port", 8081);
+app.set("port", PORT);
 app.engine("html", mustache());
 app.set("view engine", "html");
 app.set("views", __dirname + "/templates");
@@ -248,6 +249,7 @@ app.post("/game", function(request, response) {
                 responseJson.playerList = game.getPlayersInfoWithStyle();
                 responseJson.task = !player.completeTask;
                 responseJson.leave = player.canLeave;
+                responseJson.container = player.sandbox.sandboxSocket ? true : false;
 
             }
 
@@ -479,12 +481,14 @@ io.of("sandbox")
     console.log("Wow! Sandbox socket connected!");
     let playerId = socket.handshake.query.id;
     let sessionId = socket.handshake.query.session;
+    // in test case
     if (playerId == testId) {
 
         testSandbox.connect(socket);
         fs.readFile(__dirname + "/task/1/tests.cs", function(err, fileContent) {
             testSandbox.loadTests(fileContent);
         });
+        return;
 
     }
     let game = gameSessions.find((gm) => gm.id == sessionId);
@@ -494,6 +498,7 @@ io.of("sandbox")
         if (player) {
 
             player.sandbox.connect(socket);
+            game.loadTestsForPlayer(player);
 
         } else {
 
@@ -503,9 +508,9 @@ io.of("sandbox")
 
 });
 
-server.listen(8081, "0.0.0.0", function() {
+server.listen(PORT, "0.0.0.0", function() {
 
-    console.log("Starting server on port 8081");
+    console.log(`Starting server on port ${PORT}`);
 
 });
 

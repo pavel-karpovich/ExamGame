@@ -14,7 +14,7 @@ let confirm_loader = document.querySelector(".gears");
 let code = document.getElementById("code");
 let trash = document.querySelector(".terminal-trash");
 let definition = document.querySelector(".md-container");
-let test_result_box = document.getElementById("#test_result");
+let test_result_box = document.getElementById("test_result");
 let test_result_message = document.querySelector("#test_result .message-content")
 let test_result_button = document.querySelector("#test_result .message-button");
 
@@ -23,7 +23,7 @@ let containerBox = null;
 
 Terminal.applyAddon(fit); 
 
-let vMove = (e) => {
+let hMove = (e) => {
 
     let size = 100 * (e.clientY - containerBox.top) / (containerBox.bottom - containerBox.top);
     up_panel.style.height = `calc(${size}% - 5px)`;
@@ -31,7 +31,7 @@ let vMove = (e) => {
     term.fit();
 
 }
-let hMove = (e) => {
+let vMove = (e) => {
 
     let size = 100 * (e.clientX - containerBox.left) / (containerBox.right - containerBox.left);
     lf_panel.style.width = `calc(${size}% - 5px)`;
@@ -63,58 +63,60 @@ function resizePanel(moveFunc) {
 
     }
 }
-v_splitter.addEventListener("mousedown", resizePanel(vMove));
 h_splitter.addEventListener("mousedown", resizePanel(hMove));
+v_splitter.addEventListener("mousedown", resizePanel(vMove));
 
 let pattern = /^calc\((.+)% - 5px\)$/;
-let saved_h = null;
 let saved_v = null;
+let saved_h = null;
 
-h_splitter.addEventListener("dblclick", function() {
+v_splitter.addEventListener("dblclick", function() {
 
     let lf_perc = pattern.exec(lf_panel.style.width)[1];
-    if (saved_h && (lf_perc < 2.0 || lf_perc > 98.0)) {
+    if (saved_v && (lf_perc < 2.0 || lf_perc > 98.0)) {
 
-        lf_panel.style.width = `calc(${saved_h}% - 5px)`;
-        rt_panel.style.width = `calc(${100.0 - saved_h}% - 5px)`;
+        lf_panel.style.width = `calc(${saved_v}% - 5px)`;
+        rt_panel.style.width = `calc(${100.0 - saved_v}% - 5px)`;
 
     } else if (parseFloat(lf_perc) > 50.0) {
 
         lf_panel.style.width = "calc(100% - 5px)";
         rt_panel.style.width = "calc(0% - 5px)";
-        saved_h = lf_perc;
+        saved_v = lf_perc;
 
     } else {
 
         lf_panel.style.width = "calc(0% - 5px)";
         rt_panel.style.width = "calc(100% - 5px)";
-        saved_h = lf_perc;
+        saved_v = lf_perc;
 
     }
+    term.fit();
 
 });
 
-v_splitter.addEventListener("dblclick", function() {
+h_splitter.addEventListener("dblclick", function() {
 
     let up_perc = pattern.exec(up_panel.style.height)[1];
-    if (saved_v && (up_perc < 2.0 || up_perc > 98.0)) {
+    if (saved_h && (up_perc < 2.0 || up_perc > 98.0)) {
 
-        up_panel.style.height = `calc(${saved_v}% - 5px)`;
-        bt_panel.style.height = `calc(${100.0 - saved_v}% - 5px)`;
+        up_panel.style.height = `calc(${saved_h}% - 5px)`;
+        bt_panel.style.height = `calc(${100.0 - saved_h}% - 5px)`;
 
     } else if (parseFloat(up_perc) > 50.0) {
 
         up_panel.style.height = "calc(100% - 5px)";
         bt_panel.style.height = "calc(0% - 5px)";
-        saved_v = up_perc;
+        saved_h = up_perc;
 
     } else {
 
         up_panel.style.height = "calc(0% - 5px)";
         bt_panel.style.height = "calc(100% - 5px)";
-        saved_v = up_perc;
+        saved_h = up_perc;
 
     }
+    term.fit();
 
 });
 
@@ -297,6 +299,14 @@ function showLeaveButton() {
 
 }
 
+function containerReady() {
+
+    run_button.classList.remove("blocked-button");
+    confirm_button.classList.remove("blocked-button");
+    leave_button.classList.remove("blocked-button");
+
+}
+
 editorSocketInit = function() {
         
     socket.on("start", () => run_button.classList.remove("blocked-button"));
@@ -345,6 +355,13 @@ editorSocketInit = function() {
 
     });
     socket.on("leave", showLeaveButton);
+
+    socket.on("init", function() {
+
+        console.log("The container was connected.");
+        containerReady();
+
+    });
 
 }
 
@@ -417,7 +434,6 @@ function loadTerm() {
 
     echo.print(getDefLine());
     term.focus();
-
 
 }
 

@@ -83,7 +83,6 @@ class Sandbox {
                 this.clientSocket.emit("err", {
                     error: "Code is already executing"
                 });
-                this.codeIsRunning = true;
 
             } else {
 
@@ -108,7 +107,7 @@ class Sandbox {
 
             } else if (!this.codeIsRunning) {
 
-                console.log("Iinput can only be proccessed if the code is running");
+                console.log("Input can only be proccessed if the code is running");
                 this.clientSocket.emit("err", {
                     error: "Input can only be proccessed if the code is running"
                 });
@@ -158,7 +157,7 @@ class Sandbox {
                     error: "The container is off, what other tests?!"
                 });
 
-            } else if (this.testIsRunning) {
+            } else if (this.testsIsRunning) {
 
                 console.log("Unable to run tests in parallel");
                 this.clientSocket.emit("err", {
@@ -171,8 +170,6 @@ class Sandbox {
                 this.sandboxSocket.emit("test", {
                     sourceCode: data.sourceCode
                 });
-                this.testIsRunning = true;
-
             }
 
         }.bind(this));
@@ -186,7 +183,7 @@ class Sandbox {
                     error: "Wait for the container to turn on"
                 });
 
-            } else if (this.testIsRunning) {
+            } else if (!this.testsIsRunning) {
 
                 console.log("Only a running tests can be stopped");
                 this.clientSocket.emit("err", {
@@ -226,9 +223,12 @@ class Sandbox {
 
         this.sandboxSocket = sandboxSocket;
 
+        this.clientSocket.emit("init");
+
         this.sandboxSocket.on("start", function () {
 
             console.log("start...");
+            this.codeIsRunning = true;
             this.clientSocket.emit("start");
 
         }.bind(this));
@@ -249,7 +249,7 @@ class Sandbox {
             data = data || {};
             console.log("sandbox send Error");
             this.clientSocket.emit("err", {
-                output: data.error
+                error: data.error
             });
 
         }.bind(this));
@@ -262,17 +262,18 @@ class Sandbox {
             if (this.onTestResults) {
                 this.onTestResults(data.status, data.results);
             }
+            this.testsIsRunning = false;
             this.clientSocket.emit("test-end", {
                 status: data.status,
                 results: data.results
             });
-            this.testsIsRunning = false;
 
         }.bind(this));
 
         this.sandboxSocket.on("start-test", function () {
 
             console.log("start tests...");
+            this.testsIsRunning = true;
             this.clientSocket.emit("start-test");
 
         }.bind(this));
@@ -300,7 +301,7 @@ class Sandbox {
 
             console.log("stop test command succeed");
             this.clientSocket.emit("stop-test-end");
-            this.testIsRunning = false;
+            this.testsIsRunning = false;
 
         }.bind(this));
 
@@ -324,6 +325,16 @@ class Sandbox {
             });
         }
 
+    }
+
+    stopActivity() {
+
+        if (this.codeIsRunning) {
+            this.sandboxSocket.emit("stop");
+        }
+        if (this.testsIsRunning) {
+            this.sandboxSocket.emit("stop-test");
+        }
     }
 
     exit() {

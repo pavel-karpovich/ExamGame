@@ -53,15 +53,16 @@ for (let frame of frames) {
     frame.onmousedown = startCustomDrag;
 
 }
-let maxZIndex = 10; // windows zIndex = [10;100]
+let maxZIndex = 4; // windows zIndex = [4;8]
 let windows = document.querySelectorAll(".window");
 for (let window of windows) {
 
     window.addEventListener("mousedown", function() {
 
-        if (maxZIndex == 100) {
+        if (maxZIndex == 8) {
 
-            windows.forEach((w) => w.style.zIndex = 10)
+            maxZIndex = 4;
+            windows.forEach((w) => w.style.zIndex = maxZIndex);
 
         }
         maxZIndex++;

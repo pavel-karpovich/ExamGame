@@ -355,14 +355,13 @@ async function checkGameState() {
                 setSessionState(SessionState.INGAME);
                 renderGame();
                 if (data.task) {
-
                     task_hanging = true;
-
                 }
                 if (data.leave) {
-                    
                     showLeaveButton();
-                    
+                }
+                if (data.container) {
+                    containerReady();
                 }
 
             }
