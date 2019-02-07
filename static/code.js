@@ -257,7 +257,6 @@ function onTestSuccessButtonClick() {
 
 }
 
-
 test_result_button.addEventListener("click", function () {
 
     test_result_box.classList.add("invisible");

@@ -1,53 +1,70 @@
 using System;
+using System.IO;
+using System.Reflection;
 using Xunit;
 
 namespace Code.Tests
 {
-    public class UnitTest1
+    public class TestFixture1 : IDisposable
     {
+
+        public Type testClass;
+
+        public TestFixture1()
+        {
+            this.testClass = typeof(Code.User);
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    public class UnitTest1 : IClassFixture<TestFixture1>
+    {
+        public Type testClass;
+
+        public UnitTest1(TestFixture1 fixture)
+        {
+            this.testClass = fixture.testClass;
+        }
+
         [Fact]
         public void Test1()
         {
-            int a = 40;
-            int b = 30;
 
-            int max = Code.Program.Max(a, b);
+            PropertyInfo[] properties = testClass.GetProperties();
+            
+            Assert.True(properties.Length > 6, "Слишком мало свойств");
 
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
         }
 
         [Fact]
         public void Test2()
         {
-            int a = 30;
-            int b = 40;
+            ConstructorInfo[] constructors = testClass.GetConstructors();
 
-            int max = Code.Program.Max(a, b);
+            Assert.True(constructors.Length > 2, "Мало конструкторов!");
 
-            Assert.True(max == b, "Неправильно работает с параметрами " + a + " и " + b);
         }
 
         [Fact]
         public void Test3()
         {
-            int a = -3;
-            int b = -17;
+            ConstructorInfo[] constructors = testClass.GetConstructors();
+            User user = null;
+            foreach (var constr in constructors)
+            {
+                if (constr.GetParameters().Length == 0)
+                {
+                    user = (User)constr.Invoke(new object[] { });
+                }
+            }
 
-            int max = Code.Program.Max(a, b);
+            Assert.True(user != null, "И куда это у нас подевался конструктор по умолчанию?");
 
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
         }
 
-        [Fact]
-        public void Test4()
-        {
-            int a = 0;
-            int b = 0;
-
-            int max = Code.Program.Max(a, b);
-
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
-        }
 
     }
 }

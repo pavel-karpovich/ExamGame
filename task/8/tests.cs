@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Reflection;
 using Xunit;
 
 namespace Code.Tests
@@ -8,46 +10,39 @@ namespace Code.Tests
         [Fact]
         public void Test1()
         {
-            int a = 40;
-            int b = 30;
+            string[] arr = { "Петя", "Серёжа", "Ника", "Сева", "Лёша" };
+            string sep = " и ";
 
-            int max = Code.Program.Max(a, b);
+            string join = Code.Program.JoinString(sep, arr);
+            string desired = "Петя и Серёжа и Ника и Сева и Лёша";
 
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
+            Assert.True(join == desired, "Ничего не работает...");
         }
 
         [Fact]
         public void Test2()
         {
-            int a = 30;
-            int b = 40;
+            string[] arr = { "А воз и ныне там" };
+            string sep = "лишнее";
 
-            int max = Code.Program.Max(a, b);
+            string join = Code.Program.JoinString(sep, arr);
+            string desired = arr[0];
 
-            Assert.True(max == b, "Неправильно работает с параметрами " + a + " и " + b);
+            Assert.True(join == desired, "Если в массиве меньше 2 строк, разделитель не должен использоваться");
         }
 
         [Fact]
         public void Test3()
         {
-            int a = -3;
-            int b = -17;
+            string[] arr = { "Камень", "Ножницы", "Бумага" };
+            string sep = ",";
 
-            int max = Code.Program.Max(a, b);
+            string join = Code.Program.JoinString(sep, arr);
+            int delCount = join.Split(sep).Length - 1;
+            int desired = 2;
 
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
+            Assert.True(delCount == desired, "Для трёх слов должно быть вставлено 2 разделителя");
         }
-
-        [Fact]
-        public void Test4()
-        {
-            int a = 0;
-            int b = 0;
-
-            int max = Code.Program.Max(a, b);
-
-            Assert.True(max == a, "Неправильно работает с параметрами " + a + " и " + b);
-        }
-
+        
     }
 }

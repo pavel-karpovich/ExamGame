@@ -78,8 +78,8 @@ module.exports.getQueryParams = function(url) {
 
 module.exports.randomDice = function() {
 
-    return 1 + Math.floor(Math.random() * 6);
-
+    //return 1 + Math.floor(Math.random() * 6);
+    return 1;
 };
 
 module.exports.readFileAsync = async function (filename) {

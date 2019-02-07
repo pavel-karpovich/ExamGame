@@ -4,7 +4,7 @@ let cells = [];
 let sessionName;
 let username;
 
-const SPEED = 0.3;
+const SPEED = 0.1;
 
 const BLEND_TIME  = {
     IdleToWalk: 500,

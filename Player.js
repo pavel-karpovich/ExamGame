@@ -2,7 +2,7 @@
 const Sandbox = require("./Sandbox");
 
 // time on 1 task execution
-const TASK_TIME = 1 * 60 * 1000; 
+const TASK_TIME = 10 * 60 * 1000; 
 
 class Player {
 
