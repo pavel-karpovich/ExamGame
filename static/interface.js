@@ -5,6 +5,13 @@ const MAX_USERNAME_LENGTH = 30;
 let name_input = document.getElementById("username");
 name_input.setAttribute("maxlength", MAX_USERNAME_LENGTH);
 
+let reg_cancel_btn = document.getElementById("reg_cancel");
+reg_cancel_btn.onclick = function() {
+    
+    window.location = "/game";
+
+}
+
 function getCoords(elem) {
 
     let box = elem.getBoundingClientRect();

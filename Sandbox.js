@@ -48,11 +48,11 @@ class Sandbox {
                 ]
             }
         };
-        ecs.runTask(params, function(err, data) {
-            if (err) {
-                console.log("err when creating ECS task:", err, err.stack);
-            }
-        });
+        // ecs.runTask(params, function(err, data) {
+        //     if (err) {
+        //         console.log("err when creating ECS task:", err, err.stack);
+        //     }
+        // });
 
         this.userId = userId;
         this.updateClientSocket(clientSocket);

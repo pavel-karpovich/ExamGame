@@ -25,7 +25,7 @@
 }
 .left-lobby-column > p:first-child {
     font-size: 2.6rem;
-    font-family: 'Lobster Two', cursive;
+    font-family: 'Lobster', cursive;
     text-align: center;
     margin: 1rem 0;
 }
@@ -33,12 +33,8 @@
     text-align: center;
     font-size: 1.2rem;
 }
-@counter-style numeric-padded {
-    system: numeric;
-    symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F";
-} 
 .left-lobby-column > div > ol {
-    list-style-type: numeric-padded;
+    list-style-type: decimal-leading-zero;
     margin: 0 20%;
     font-size: 1.3rem;
 }
@@ -439,7 +435,7 @@ td {
     background-color: rgba(255, 255, 255, 0.85);
 }
 .chat-send {
-    height: 2.2vw;
+    height: 2vw;
     width: 20%;
 }
 .chat-send > svg {
