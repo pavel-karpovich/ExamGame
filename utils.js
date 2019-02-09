@@ -1,4 +1,5 @@
 const fs = require("fs");
+const os = require("os");
 
 module.exports.getRandomId = function() {
 
@@ -88,4 +89,21 @@ module.exports.readFileAsync = async function (filename) {
             err ? reject(err) : resolve(data);
         });
     });
+}
+
+module.exports.getIpAddress = function() {
+
+    let ifaces = os.networkInterfaces();
+    let firstIp = null;
+    try {
+    
+        firstIp = ifaces.eth0[0].address;
+    
+    } catch (excp) {
+
+        console.log("Can't recieve local IP address");
+
+    }
+    return firstIp;
+    
 }

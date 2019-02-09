@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const { exec } = require("child_process");
 const socketIO = require("socket.io");
 const mustache = require("mustache-express");
+const favicon = require("serve-favicon");
 
 const app = express();
 const server = http.Server(app);
@@ -21,7 +22,7 @@ const { getPath } = require("./Level");
 
 let gameSessions = new Array();
 
-const PORT = 8081;
+const PORT = 80;
 // 30 minutes
 const PREPARING_TIME_LIMIT = 2 * 60 * 60 * 1000;
 const COOKIE_AGE = 5 * 60 * 60 * 1000;
@@ -48,7 +49,9 @@ function endGame() {
 app.set("port", PORT);
 app.engine("html", mustache());
 app.set("view engine", "html");
-app.set("views", __dirname + "/templates");
+app.set("views", path.join(__dirname, "templates"));
+
+app.use(favicon(path.join(__dirname, "static", "images", "favicon.ico")))
 app.use(cookieParser());
 app.use(bodyParser.json());
 // temp
@@ -65,9 +68,9 @@ app.use("/node_modules", express.static(__dirname + "/node_modules"));
     
 app.get("/test", function(request, response) {
 
-    fs.readFile(__dirname + "/task/1/startup.cs", "utf8", function(err, startup) {
+    fs.readFile(path.join(__dirname, "task", "1", "startup.cs"), "utf8", function(err, startup) {
 
-        fs.readFile(__dirname + "/task/1/definition.md", "utf8", function(err, definition) {
+        fs.readFile(path.join(__dirname, "task", "1", "definition.md"), "utf8", function(err, definition) {
 
             response.render("test.html", { startup, definition });
 
@@ -485,7 +488,7 @@ io.of("sandbox")
     if (playerId == testId) {
 
         testSandbox.connect(socket);
-        fs.readFile(__dirname + "/task/1/tests.cs", function(err, fileContent) {
+        fs.readFile(path.join(__dirname, "task", "1", "tests.cs"), function(err, fileContent) {
             testSandbox.loadTests(fileContent);
         });
         return;

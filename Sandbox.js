@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk");
+const { getIpAddress } = require("./utils");
 
 AWS.config.loadFromPath("./config.aws");
 
@@ -6,7 +7,7 @@ const ecs = new AWS.ECS({
     apiVersion: "2014-11-13"
 });
 
-const serverAddress = "http://172.31.5.20:8081";
+const serverAddress = getIpAddress();
 
 class Sandbox {
 
