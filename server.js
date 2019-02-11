@@ -1,19 +1,18 @@
 // Dependencies
-const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");
+const https = require("https");
 
 const express = require("express");
 const cookieParser = require("cookie-parser")
 const bodyParser = require("body-parser");
-const { exec } = require("child_process");
 const socketIO = require("socket.io");
 const mustache = require("mustache-express");
-const favicon = require("serve-favicon");
 
 const app = express();
-const server = http.Server(app);
-const io = socketIO(server);
+const httpServer = http.createServer(app);
+let io = null;
 
 const { getRandomId, getCookie, getQueryParams, randomDice } = require("./utils");
 let { GameSession, GameState } = require("./Game");
@@ -45,28 +44,57 @@ const PlayerGameState = {
 function endGame() {
 
 }
+const enableTLS = process.argv[2];
 
-app.set("port", PORT);
+if (enableTLS == "-s") {
+
+    const privateKeyPath = process.env.GAME_PRIVATE_KEY_PATH;
+    const certificatePath = process.env.GAME_CERTIFICATE_PATH;
+    const caPath = process.env.GAME_CA_PATH;
+
+    const privateKey = fs.readFileSync(privateKeyPath, "utf8");
+    const certificate = fs.readFileSync(certificatePath, "utf8");
+    const ca = fs.readFileSync(caPath, "utf8");
+
+    const credentials = {
+        key: privateKey,
+        cert: certificate,
+        ca: ca
+    };
+
+    const httpsServer = https.createServer(credentials, app);
+    io = socketIO(httpsServer);
+
+    httpsServer.listen(443, "0.0.0.0", function() {
+
+        console.log(`Starting HTTPS server on port 443`);
+
+    });
+    
+    app.use(function(req, res, next) {
+        if(!req.secure) {
+            return res.redirect(["https://", req.get("Host"), req.url].join(""));
+        }
+        next();
+    });
+} else {
+    
+    io = socketIO(httpServer);
+
+}
+
 app.engine("html", mustache());
+app.set("port", PORT);
 app.set("view engine", "html");
 app.set("views", path.join(__dirname, "templates"));
 
-app.use(favicon(path.join(__dirname, "static", "images", "favicon.ico")))
 app.use(cookieParser());
 app.use(bodyParser.json());
-// temp
-app.disable('view cache');
-/*
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
-*/
 app.use("/static", express.static(__dirname + "/static"));
 app.use("/node_modules", express.static(__dirname + "/node_modules"));
+app.use(express.static(__dirname, { dotfiles: "allow" } ));
     
-app.get("/test", function(request, response) {
+app.get("/editor", function(request, response) {
 
     fs.readFile(path.join(__dirname, "task", "1", "startup.cs"), "utf8", function(err, startup) {
 
@@ -76,27 +104,6 @@ app.get("/test", function(request, response) {
 
         });
     });
-
-});
-
-app.get("/editor", async function(request, response) {
-
-    let sessionId = request.query.session;
-    let playerId = request.cookies[sessionId];
-    let game = gameSessions.find((gm) => gm.id == sessionId);
-    if (game) {
-    
-        let player = game.getPlayerById(playerId);
-        if (player) {
-
-            let startup = await game.getDefaultCodeForPlayer(player);
-            console.log(startup);
-            let definition = await game.getTaskForPlayer(player);
-            response.render("editor.html", { startup, definition });
-            game.loadTestsForPlayer(player);
-
-        }
-    }
 
 });
 
@@ -511,11 +518,12 @@ io.of("sandbox")
 
 });
 
-server.listen(PORT, "0.0.0.0", function() {
+httpServer.listen(PORT, "0.0.0.0", function() {
 
-    console.log(`Starting server on port ${PORT}`);
+    console.log(`Starting HTTP server on port ${PORT}`);
 
 });
+
 
 // TODO: 
 // > add React. Just do it
