@@ -35,7 +35,7 @@ echo.println("Connecting to the personal exam container....");
 echo.println(`Using username "${username}".`);
 echo.println("Authenticating with public key \"imported-openssh-key\"");
 
-let vMove = (e) => {
+const vMove = (e) => {
 
     let size = 100 * (e.clientY - containerBox.top) / (containerBox.bottom - containerBox.top);
     up_panel.style.height = `calc(${size}% - 5px)`;
@@ -43,7 +43,7 @@ let vMove = (e) => {
     term.fit();
 
 }
-let hMove = (e) => {
+const hMove = (e) => {
 
     let size = 100 * (e.clientX - containerBox.left) / (containerBox.right - containerBox.left);
     lf_panel.style.width = `calc(${size}% - 5px)`;
@@ -78,7 +78,7 @@ function resizePanel(moveFunc) {
 v_splitter.addEventListener("mousedown", resizePanel(vMove));
 h_splitter.addEventListener("mousedown", resizePanel(hMove));
 
-let pattern = /^calc\((.+)% - 5px\)$/;
+const pattern = /^calc\((.+)% - 5px\)$/;
 let saved_h = null;
 let saved_v = null;
 
@@ -132,27 +132,28 @@ v_splitter.addEventListener("dblclick", function() {
 
 window.addEventListener("resize", () => term.fit());
 
-let socket = io.connect("/test", {
+const socket = io.connect("/test", {
     reconnection: true,
     reconnectionAttempts: 2
 });
 
 CodeMirror.defaults.autofocus = true;
+const protocol = location.protocol === "https:" ? "wss" : "ws";
 const mirror = mirrorsharp(code, {
-    serviceUrl: "ws://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp",
+    serviceUrl: `${protocol}://sharp.game.paradox.red/mirrorsharp`,
     selfDebugEnabled: true,
     language: "C#"
 });
 
-let codemirror = mirror.getCodeMirror();
+const codemirror = mirror.getCodeMirror();
 codemirror.setOption("matchBrackets", true);
 codemirror.setOption("autoCloseBrackets", true);
 codemirror.setOption("lineNumbers", true);
 codemirror.setOption("styleActiveLine", true);
-let sourceCodeDoc = codemirror.getDoc();
+const sourceCodeDoc = codemirror.getDoc();
 
-let markdownConverter = new showdown.Converter();
-let htmlMd = markdownConverter.makeHtml(definition.innerHTML);
+const markdownConverter = new showdown.Converter();
+const htmlMd = markdownConverter.makeHtml(definition.innerHTML);
 definition.innerHTML = htmlMd;
 
 let isRunning = false;

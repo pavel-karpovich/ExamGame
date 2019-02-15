@@ -31,6 +31,8 @@ function getRandomPosition(initVec) {
 
 }
 
+let connectPlayer = null;
+
 function renderGame() {
 
 
@@ -96,7 +98,7 @@ function renderGame() {
                 let ghostMesh = ms[0];
                 ghostMesh.visibility = 0;
                 ghostMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
-                for (let player of players) {
+                connectPlayer = function(player) {
 
                     let playerMesh = ghostMesh.clone("m_" + player.name);
                     playerMesh.skeleton = ghostMesh.skeleton.clone("s_" + player.name);
@@ -150,6 +152,11 @@ function renderGame() {
                         player.ghost.FPS = FPS_FOR_OWNER;
 
                     }
+                }
+
+                for (let player of players) {
+
+                    connectPlayer(player);
 
                 }
                 

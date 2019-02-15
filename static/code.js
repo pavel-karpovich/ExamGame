@@ -5,25 +5,22 @@ const bt_panel = document.querySelector(".bottom-split-panel");
 const up_panel = document.querySelector(".upper-split-panel");
 const lf_panel = document.querySelector(".left-split-panel");
 const rt_panel = document.querySelector(".right-split-panel");
-let run_loader = document.querySelector(".run-loader");
-let run_button = document.getElementById("run_button");
-let confirm_button = document.getElementById("confirm_button");
-let confirm_span = document.querySelector("#confirm_button > span:nth-child(1)");
-let dots_span = document.querySelector("#confirm_button > span:nth-child(2)");
-let confirm_loader = document.querySelector(".gears");
-let code = document.getElementById("code");
-let trash = document.querySelector(".terminal-trash");
-let definition = document.querySelector(".md-container");
-let test_result_box = document.getElementById("test_result");
-let test_result_message = document.querySelector("#test_result .message-content")
-let test_result_button = document.querySelector("#test_result .message-button");
-
+const run_loader = document.querySelector(".run-loader");
+const run_button = document.getElementById("run_button");
+const confirm_button = document.getElementById("confirm_button");
+const confirm_span = document.querySelector("#confirm_button > span:nth-child(1)");
+const dots_span = document.querySelector("#confirm_button > span:nth-child(2)");
+const confirm_loader = document.querySelector(".gears");
+const code = document.getElementById("code");
+const trash = document.querySelector(".terminal-trash");
+const definition = document.querySelector(".md-container");
+const test_result_box = document.getElementById("test_result");
+const test_result_message = document.querySelector("#test_result .message-content")
+const test_result_button = document.querySelector("#test_result .message-button");
 
 let containerBox = null;
 
-Terminal.applyAddon(fit); 
-
-let hMove = (e) => {
+const hMove = (e) => {
 
     let size = 100 * (e.clientY - containerBox.top) / (containerBox.bottom - containerBox.top);
     up_panel.style.height = `calc(${size}% - 5px)`;
@@ -31,7 +28,7 @@ let hMove = (e) => {
     term.fit();
 
 }
-let vMove = (e) => {
+const vMove = (e) => {
 
     let size = 100 * (e.clientX - containerBox.left) / (containerBox.right - containerBox.left);
     lf_panel.style.width = `calc(${size}% - 5px)`;
@@ -66,7 +63,7 @@ function resizePanel(moveFunc) {
 h_splitter.addEventListener("mousedown", resizePanel(hMove));
 v_splitter.addEventListener("mousedown", resizePanel(vMove));
 
-let pattern = /^calc\((.+)% - 5px\)$/;
+const pattern = /^calc\((.+)% - 5px\)$/;
 let saved_v = null;
 let saved_h = null;
 
@@ -126,25 +123,28 @@ window.addEventListener("resize", () => {
     }
 });
 
+Terminal.applyAddon(fit); 
+
 CodeMirror.defaults.autofocus = true;
+const protocol = location.protocol === "https:" ? "wss" : "ws";
 const mirror = mirrorsharp(code, {
-    serviceUrl: "ws://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp",
+    serviceUrl: `${protocol}://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp`,
     selfDebugEnabled: true,
     language: "C#"
 });
 
-let codemirror = mirror.getCodeMirror();
+const codemirror = mirror.getCodeMirror();
 codemirror.setOption("matchBrackets", true);
 codemirror.setOption("autoCloseBrackets", true);
 codemirror.setOption("lineNumbers", true);
 codemirror.setOption("styleActiveLine", true);
-let sourceCodeDoc = codemirror.getDoc();
+const sourceCodeDoc = codemirror.getDoc();
 
-let markdownConverter = new showdown.Converter();
+const markdownConverter = new showdown.Converter();
 
 function updateMd(text) {
 
-    let htmlMd = markdownConverter.makeHtml(text);
+    const htmlMd = markdownConverter.makeHtml(text);
     definition.innerHTML = htmlMd;
 
 }

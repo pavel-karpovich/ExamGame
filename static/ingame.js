@@ -4,6 +4,7 @@ let confirm_input = document.getElementById("reg_confirm");
 
 let params = (new URL(document.location)).searchParams;
 let gameSession = params.get("session");
+let plid = params.get("plid");
 
 let socket;
 let dice;
@@ -115,6 +116,11 @@ function setSessionState(sessionState) {
         case SessionState.LOBBY:
             register_div.classList.add("invisible");
             lobby_div.classList.remove("invisible");
+            if (plid) {
+
+                document.querySelector(".connect-div").classList.remove("invisible");
+
+            }
             document.dispatchEvent(new Event("onenterlobby"));
             break;
         case SessionState.INGAME:
@@ -182,6 +188,14 @@ function connect() {
     socket.on("message", function(data) {
 
         recieveMessage(data.sender, data.text);
+
+    });
+    socket.on("belated-connect", function(data) {
+
+        let player = players.find(pl => pl.name == data.name);
+        if (connectPlayer) {
+            connectPlayer(player);
+        }
 
     });
 
@@ -310,10 +324,18 @@ onGameRendered = function() {
 
 };
 
+let connect_btn = document.getElementById("connect");
+connect_btn.addEventListener("click", function() {
+
+    socket.emit("play");
+
+});
+
 async function checkGameState() {
 
     let body = {
-        sessionId: gameSession
+        sessionId: gameSession,
+        plid
     };
     try {
 
@@ -385,7 +407,8 @@ async function registerInGame() {
     let username_input = document.getElementById("username");
     let body = {
         sessionId: gameSession,
-        username: username_input.value
+        username: username_input.value,
+        plid
     };
     try {
 
@@ -424,6 +447,7 @@ async function registerInGame() {
 
 }
 
-document.addEventListener("DOMContentLoaded", checkGameState, false);
 confirm_input.addEventListener("click", registerInGame, false);
 
+// important detail!
+document.addEventListener("DOMContentLoaded", checkGameState, false);

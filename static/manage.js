@@ -6,7 +6,6 @@ let create_btn = document.getElementById("create");
 let sessionName;
 let socket;
 
-
 const ManageGameState = {
     NONE: "none",
     PREPARE: "prepare",
@@ -65,6 +64,19 @@ function registerSocket() {
         }
         
     });
+    socket.on("take-link", function(data) {
+
+        let links = document.querySelectorAll(".join-links-container > div");
+        for (let link of links) {
+
+            if (link.innerHTML.includes(data.link)) {
+
+                document.querySelector(".join-links-container").removeChild(link);
+                break;
+
+            }
+        }
+    });
 
 }
 
@@ -106,6 +118,15 @@ function createSession() {
     
 }
 
+let link_container = document.querySelector(".join-links-container");
+function addLink(link) {
+
+    let newLinkElement = document.createElement("div");
+    newLinkElement.innerHTML = link;
+    link_container.appendChild(newLinkElement);
+
+}
+
 function getData() {
 
     fetch("manage", {
@@ -127,16 +148,20 @@ function getData() {
         
         case ManageGameState.NONE:
             break;
+
         case ManageGameState.PREPARE:
             let link_input = document.getElementById("link");
             link_input.value = data.directLink;
             for (let player of data.players) {
-
                 addPlayerName(player.name);
-
             }
             registerSocket();
+            break;
+
         case ManageGameState.GAME:
+            for (let link of data.links) {
+                addLink(link);
+            }
             registerSocket();
             break;
 
@@ -173,7 +198,7 @@ function startGame() {
 
     }).catch((error) => {
 
-        console.log("Error in request to manage api: \n" + error);
+        console.log("Error in request to manage/start api: \n" + error);
 
     });
 
@@ -184,4 +209,31 @@ document.addEventListener("DOMContentLoaded", getData, false);
 create_btn.addEventListener("click", createSession, false);
 start_btn.addEventListener("click", startGame, false);
 
+let belated_link_button = document.getElementById("belated_join");
+belated_link_button.addEventListener("click", function() {
 
+    let api = "manage/link";
+    fetch(api, {
+        method: "POST",
+        credentials: "include",
+    }).then((response) => {
+
+        return response.json();
+
+    }).then((data) => {
+
+        if (data.error != undefined) {
+
+            console.log(`Response from ${api} api return error: \n${data.error}`);
+            return -1;
+
+        }
+        addLink(data.personalLink);
+
+    }).catch((error) => {
+
+        console.log("Error in request to manage/link api: \n" + error);
+
+    });
+
+});

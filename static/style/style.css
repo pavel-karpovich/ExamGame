@@ -250,6 +250,12 @@
     transition: all .5s ease;
 }
 
+.connect-div {
+    position: absolute;
+    bottom: 4%;
+    z-index: 2;
+    margin: 0 auto;
+}
 
 div>#scene {
     width: 100%;

@@ -1,5 +1,6 @@
 const Player = require("./Player");
 const Tasks = require("./Tasks");
+const { getRandomId } = require("./utils");
 
 const GameState = {
     LOBBY : "lobby",
@@ -22,7 +23,7 @@ module.exports.GameSession = class {
         this.managSocket = null;
         this.state = GameState.LOBBY;
         this.tasks = null;
-
+        this.links = [];
     }
 
     getPlayersInfo() {
@@ -93,6 +94,7 @@ module.exports.GameSession = class {
             });
 
         }
+        return newPlayer;
 
     }
 
@@ -111,6 +113,9 @@ module.exports.GameSession = class {
 
     clusterBuilder() {
 
+        if (this.players.length == 0) {
+            return;
+        }
         let i = 0, timeout = 2000;
         let sandboxCreationChain = () => {
 
@@ -134,6 +139,14 @@ module.exports.GameSession = class {
         this.tasks = new Tasks();
         this.clusterBuilder();
 
+    }
+
+    connectPlayer(player) {
+
+        player.socket.emit("start-game");
+        player.createSandbox(this.id);
+        player.belated_state = undefined;
+        this.broadcast("belated-connect", { name: player.name })
     }
 
     updatePlayerPositionAndStats(name, path, total, out) {
@@ -173,6 +186,32 @@ module.exports.GameSession = class {
 
             }
         }
+    }
+
+    getIdForBelatedLink() {
+
+        let uniqueLinkId = null;
+        do {
+            
+            uniqueLinkId = getRandomId();
+
+        } while(this.links.find(lk => lk == uniqueLinkId));
+        this.links.push(uniqueLinkId);
+        return uniqueLinkId;
+
+    }
+
+    isActualFreeLink(plid) {
+
+        return this.links.find(lk => lk == plid) ? true : false;
+
+    }
+
+    assignLink(player, link) {
+
+        this.links = this.links.filter(lk => lk != link);
+        player.belated_state = GameState.LOBBY;
+        this.managSocket.emit("take-link", { link });
     }
     
 };

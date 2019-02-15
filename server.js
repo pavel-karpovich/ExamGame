@@ -21,7 +21,7 @@ const { getPath } = require("./Level");
 
 let gameSessions = new Array();
 
-const PORT = 80;
+const PORT = 8081;
 // 30 minutes
 const PREPARING_TIME_LIMIT = 2 * 60 * 60 * 1000;
 const COOKIE_AGE = 5 * 60 * 60 * 1000;
@@ -96,9 +96,9 @@ app.use(express.static(__dirname, { dotfiles: "allow" } ));
     
 app.get("/editor", function(request, response) {
 
-    fs.readFile(path.join(__dirname, "task", "1", "startup.cs"), "utf8", function(err, startup) {
+    fs.readFile(path.join(__dirname, "task", "2", "startup.cs"), "utf8", function(err, startup) {
 
-        fs.readFile(path.join(__dirname, "task", "1", "definition.md"), "utf8", function(err, definition) {
+        fs.readFile(path.join(__dirname, "task", "2", "definition.md"), "utf8", function(err, definition) {
 
             response.render("test.html", { startup, definition });
 
@@ -126,10 +126,10 @@ app.post("/manage", function(request, response) {
     let game = gameSessions.find((gm) => gm.id == sessionId);
     if (game) {
 
+        let host = request.get("host");
         if (game.state == GameState.LOBBY) {
 
-            responseJson.directLink =
-                request.protocol + "://" + request.get("host") + "/game?session=" + sessionId;
+            responseJson.directLink = `${request.protocol}://${host}/game?session=${sessionId}`;
             responseJson.players = game.getPlayersInfo();
             responseJson.sessionState = ManageGameState.PREPARE;
 
@@ -137,9 +137,14 @@ app.post("/manage", function(request, response) {
 
             responseJson.players = game.getPlayersInfo();
             responseJson.sessionState = ManageGameState.GAME;
+            responseJson.links = [];
+            for (let link of game.links) {
 
+                responseJson.links.push(
+                    `${request.protocol}://${host}/game?session=${sessionId}&plid=${link}`);
+
+            }
         }
-
     }
     response.json(responseJson);
 
@@ -171,11 +176,8 @@ app.post("/manage/create", function(request, response) {
                             gameSessions = gameSessions.filter((gm) => gm.id != id);
 
                         }
-
                     }
-
                 }
-
             };
             setTimeout(cb(uniqueId), PREPARING_TIME_LIMIT);
             game.onEnd = endGame; // TODO
@@ -186,7 +188,6 @@ app.post("/manage/create", function(request, response) {
             response.cookie("manage", uniqueId, { maxAge: COOKIE_AGE, httpOnly: true });
 
         }
-
     }
     response.json(responseJson);
 
@@ -209,6 +210,25 @@ app.post("/manage/start", function(request, response) {
     response.json(responseJson);
 
 });
+app.post("/manage/link", function(request, response) {
+
+    let responseJson = {};
+    let sessionId = request.cookies["manage"];
+    let game = gameSessions.find((gm) => gm.id == sessionId);
+    if (game && game.state == GameState.RUNNING) {
+
+        let uniqueId = game.getIdForBelatedLink();
+        responseJson.personalLink =
+            `${request.protocol}://${request.get("host")}/game?session=${sessionId}&plid=${uniqueId}`;
+
+    } else {
+
+        responseJson.error = "Can't get unique personal link for the non started game";
+
+    }
+    response.json(responseJson);
+
+});
 app.get("/game", function(request, response) {
 
     let sessionId = request.query.session;
@@ -224,17 +244,16 @@ app.get("/game", function(request, response) {
             response.status(404).sendFile(path.join(__dirname, "404.html"));
             
         }
-
     } else {
 
         response.sendFile(path.join(__dirname, "list.html"));
 
     }
-
 });
 app.post("/game", function(request, response) {
 
     let sessionId = request.body.sessionId;
+    let plid = request.body.plid;
     let responseJson = {
         playerState: PlayerGameState.UNAUTH
     };
@@ -242,13 +261,14 @@ app.post("/game", function(request, response) {
     let game = gameSessions.find((gm) => gm.id == sessionId);
     if (game) {
     
+        let plidFirstUse = game.isActualFreeLink(plid);
         responseJson.sessionName = game.name;
         let player = game.getPlayerById(playerId);
         if (player) {
 
             responseJson.username = player.name;
 
-            if (game.state == GameState.LOBBY) {
+            if (game.state == GameState.LOBBY || player.belated_state == GameState.LOBBY) {
                 
                 responseJson.playerList = game.getPlayersInfo();
                 responseJson.playerState = PlayerGameState.LOBBY;
@@ -265,15 +285,13 @@ app.post("/game", function(request, response) {
 
         } else {
 
-            if (game.state != GameState.LOBBY) {
+            if (game.state != GameState.LOBBY && !plidFirstUse) {
                 
                 responseJson.error = "Game already running. Can't join.";
                 responseJson.sessionName = game.name;
     
             }
-
         }
-
     }
     response.json(responseJson);
 
@@ -285,10 +303,12 @@ app.post("/game/reg", function(request, response) {
 
         let username = request.body.username;
         let sessionId = request.body.sessionId;
+        let plid = request.body.plid;
         let game = gameSessions.find((gm) => gm.id == sessionId);
         if (game) {
 
-            if (game.state == GameState.LOBBY) {
+            let plidFirstUse = game.isActualFreeLink(plid);
+            if (game.state == GameState.LOBBY || plidFirstUse) {
 
                 if (!username || username.length > MAX_USERNAME_LENGTH || game.nameIsTaken(username)) {
                     
@@ -302,17 +322,18 @@ app.post("/game/reg", function(request, response) {
 
                     } while (game.getPlayerById(userId));
 
-                    game.addPlayer(userId, username);
+                    let player = game.addPlayer(userId, username);
                     responseJson.playerList = game.getPlayersInfo();
+                    if (plid) {
+                        
+                        game.assignLink(player, plid);
 
+                    }
                     response.cookie(sessionId, userId, { maxAge: COOKIE_AGE, httpOnly: true });
 
                 }
-
             }
-
         }
-
     }
     response.json(responseJson);
 
@@ -401,7 +422,6 @@ io.of("manage")
             console.log(this.id + " Manager disconnected!");
 
         });
-
     });
 
 io.of("game")
@@ -464,9 +484,15 @@ io.of("game")
                 this.emit("err", {
                     error: "You can't leave now, little dirty cheater!"
                 });
+            }
+        });
+        socket.on("play", function() {
+
+            if (player.belated_state == GameState.LOBBY) {
+                
+                game.connectPlayer(player);
 
             }
-
         });
 
     });
@@ -495,7 +521,7 @@ io.of("sandbox")
     if (playerId == testId) {
 
         testSandbox.connect(socket);
-        fs.readFile(path.join(__dirname, "task", "1", "tests.cs"), function(err, fileContent) {
+        fs.readFile(path.join(__dirname, "task", "2", "tests.cs"), function(err, fileContent) {
             testSandbox.loadTests(fileContent);
         });
         return;
