@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 
+Metadata: 
+
+Parameters: 
+
+Mappings: 
+
+Conditions: 
+
+Resources: 
+  ExamJSApp:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties: 
+      ApplicationName: 'ExamJS'
+      Description: 'Application for the Exam JS project'
+  MainEnv:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties: 
+      ApplicationName: !Ref ExamJSApp
+      CNAMEPrefix: 'exam'
+      Description: 'Main component of the App - Web server that manage all public resources'
+      EnvironmentName: 'MainServer'
+      TemplateName: !Ref MainEnvConfigTemplate
+      Tier: 
+        Name: WebServer
+        Type: Standard
+      VersionLabel: 'ExamJSApp-deploy'
+  MainEnvConfigTemplate:
+    Type: AWS::ElasticBeanstalk::ConfigurationTemplate
+    Properties:
+      ApplicationName: !Ref ExamJSApp
+      Description: ElasticBeanstalk template for MainEnv
+      SolutionStackName: 64bit Amazon Linux 2018.03 v4.9.2 running Node.js
+      OptionSettings:
+      - Namespace: aws:autoscaling:asg
+        OptionName: MinSize
+        Value: '2'
+      - Namespace: aws:autoscaling:asg
+        OptionName: MaxSize
+        Value: '6'
+      - Namespace: aws:elasticbeanstalk:environment
+        OptionName: EnvironmentType
+        Value: LoadBalanced
+
+Outputs:
+  MainEnvDNS:
+    Description: Public DNSName of the newly created MainEnv server
+    Value: !GetAtt MainEnv.EndpointURL
