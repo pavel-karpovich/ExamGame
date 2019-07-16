@@ -21,16 +21,24 @@ Resources:
       CNAMEPrefix: 'exam'
       Description: 'Main component of the App - Web server that manage all public resources'
       EnvironmentName: 'MainServer'
-      TemplateName: !Ref MainEnvConfigTemplate
+      TemplateName: !Ref MainEnvTemplate
+      VersionLabel: !Ref MainEnvSource
       Tier: 
         Name: WebServer
         Type: Standard
-      VersionLabel: 'ExamJSApp-deploy'
-  MainEnvConfigTemplate:
+  MainEnvSource:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref ExamJSApp
+      Description: 'Source code of Main Env server'
+      SourceBundle:
+        S3Bucket: 'examjs'
+        S3Key: 'mainenv/ExamGame-0.3.zip'
+  MainEnvTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
       ApplicationName: !Ref ExamJSApp
-      Description: ElasticBeanstalk template for MainEnv
+      Description: 'ElasticBeanstalk template for MainEnv'
       SolutionStackName: 64bit Amazon Linux 2018.03 v4.9.2 running Node.js
       OptionSettings:
       - Namespace: aws:autoscaling:asg
