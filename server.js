@@ -11,7 +11,9 @@ const socketIO = require("socket.io");
 const mustache = require("mustache-express");
 
 const app = express();
+const redirectApp = express();
 const httpServer = http.createServer(app);
+const httpServerForRedirect = http.createServer(redirectApp);
 let io = null;
 
 const { getRandomId, getCookie, getQueryParams, randomDice } = require("./utils");
@@ -21,7 +23,8 @@ const { getPath } = require("./Level");
 
 let gameSessions = new Array();
 
-const PORT = 8081;
+const HTTP_PORT = 8081;
+const HTTPS_PORT = 4432;
 // 30 minutes
 const PREPARING_TIME_LIMIT = 2 * 60 * 60 * 1000;
 const COOKIE_AGE = 5 * 60 * 60 * 1000;
@@ -84,7 +87,7 @@ if (enableTLS == "-s") {
 }
 
 app.engine("html", mustache());
-app.set("port", PORT);
+app.set("port", HTTP_PORT);
 app.set("view engine", "html");
 app.set("views", path.join(__dirname, "templates"));
 
@@ -544,11 +547,19 @@ io.of("sandbox")
 
 });
 
-httpServer.listen(PORT, "0.0.0.0", function() {
-
-    console.log(`Starting HTTP server on port ${PORT}`);
-
+httpServer.listen(HTTP_PORT, "0.0.0.0", function() {
+    console.log(`Starting HTTP server on port ${HTTP_PORT} for HTTPS`);
 });
+
+redirectApp.get('*', function(request, response) {
+    response.redirect('https://game.paradox.red' + request.url);
+});
+httpServerForRedirect.listen(HTTPS_PORT, "0.0.0.0", function() {
+    console.log(`Starting HTTP server on port ${HTTPS_PORT} to redirect on HTTPS server`);
+});
+
+
+
 
 
 // TODO: 

@@ -128,7 +128,7 @@ Terminal.applyAddon(fit);
 CodeMirror.defaults.autofocus = true;
 const protocol = location.protocol === "https:" ? "wss" : "ws";
 const mirror = mirrorsharp(code, {
-    serviceUrl: `${protocol}://sharp.eu-west-1.elasticbeanstalk.com/mirrorsharp`,
+    serviceUrl: `${protocol}://sharp.game.paradox.red/mirrorsharp`,
     selfDebugEnabled: true,
     language: "C#"
 });

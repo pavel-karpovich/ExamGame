@@ -15,17 +15,18 @@ class Sandbox {
 
     let params = {
       cluster: "ExamJsSandbox",
-      taskDefinition: "ExamJsSandbox:6",
+      taskDefinition: "ExamJsSandbox:7",
       count: 1,
       launchType: "FARGATE",
       networkConfiguration: {
         awsvpcConfiguration: {
           subnets: [
-            "subnet-51e98d37"
+            "subnet-51e98d37",
+            "subnet-906e19d8"
           ],
           assignPublicIp: "ENABLED",
           securityGroups: [
-            "sg-0f902ff03e57223bc"
+            "sg-098232a19bad70019"
           ]
         }
       },
