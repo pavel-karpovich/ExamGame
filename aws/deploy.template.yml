@@ -100,7 +100,7 @@ Resources:
       Description: 'Source code of Mirror Sharp server'
       SourceBundle:
         S3Bucket: 'examjs'
-        S3Key: 'mirrorsharp/MirrorSharp-0.3.1.zip'
+        S3Key: 'mirrorsharp/MirrorSharp-0.3.2.zip'
   MirrorSharpEnvTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
