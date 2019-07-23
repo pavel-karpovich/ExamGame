@@ -123,6 +123,9 @@ Resources:
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: SecurityGroups
         Value: 'sg-098232a19bad70019'
+      - Namespace: aws:autoscaling:launchconfiguration
+        OptionName: InstanceType
+        Value: 't2.micro'
       - Namespace: aws:elasticbeanstalk:environment
         OptionName: EnvironmentType
         Value: 'LoadBalanced'
