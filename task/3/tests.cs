@@ -8,36 +8,34 @@ namespace Code.Tests
         [Fact]
         public void Test1()
         {
-            int a = 40;
-            int b = 30;
+            int[] arr = { 1, 2, 3, 4, 5, 6, 7 };
 
-            double hyp = Math.Round((double)Code.Program.GetHypotenuse(a, b), 4);
-            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
+            int sum = Code.Program.ArraySum(arr);
+            int realSum = 28;
 
-            Assert.True(hyp == realhyp, "Для целых чисел, таких как " + a + " и " + b + ", что-то работает неверно");
+            Assert.True(sum == realSum, "Р”Р»СЏ РјР°СЃСЃРёРІР° { 1, 2, 3, 4, 5, 6, 7 } С‡С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµС‚ С‚Р°Рє!");
         }
 
         [Fact]
         public void Test2()
         {
-            double a = 4.25;
-            double b = 3.7;
+            int[] arr = { };
 
-            double hyp = Math.Round((double)Code.Program.GetHypotenuse(a, b), 4);
-            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
+            int sum = Code.Program.ArraySum(arr);
+            int realSum = 0;
 
-            Assert.True(realhyp == hyp, "Неправильно работает с числами типа double " + a + " и " + b);
+            Assert.True(sum == realSum, "РџРѕС‡РµРјСѓ РґР»СЏ РїСѓСЃС‚РѕРіРѕ РјР°СЃСЃРёРІР° СЂРµР·СѓР»СЊС‚Р°С‚ РЅРµ 0?");
         }
 
         [Fact]
         public void Test3()
         {
-            float a = 0.12f;
-            float b = 3.94f;
+            int[] arr = { -3, 8, -3, -2, 1, -4, 3 };
 
-            double hyp = Math.Round((float)Code.Program.GetHypotenuse(a, b), 4);
-            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
-            Assert.True(realhyp == hyp, "А вот с этими float-ами что-то пошло не так: " + a + ", " + b);
+            int sum = Code.Program.ArraySum(arr);
+            int realSum = 0;
+
+            Assert.True(sum == realSum, "Р’ С‡С‘Рј РїСЂРѕР±Р»РµРјР° СЃ РјР°СЃСЃРёРІРѕРј { -3, 8, -3, -2, 1, -4, 3 }?");
         }
 
     }

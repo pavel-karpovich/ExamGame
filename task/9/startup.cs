@@ -6,7 +6,6 @@ namespace Code
     {
 
 
-
         public static void Main(string[] args)
         {
             

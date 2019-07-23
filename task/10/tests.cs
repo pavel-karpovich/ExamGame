@@ -16,7 +16,9 @@ namespace Code.Tests
             foreach (var method in methodInfos)
             {
                 var parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(int))
+                if (parameters.Length == 4 && parameters[0].ParameterType == typeof(int) &&
+                    parameters[1].ParameterType == typeof(int) && parameters[2].ParameterType == typeof(int) &&
+                    parameters[3].ParameterType == typeof(int))
                 {
                     this.testMethod = method;
                     break;
@@ -41,71 +43,41 @@ namespace Code.Tests
         [Fact]
         public void Test1()
         {
-            int size = 10000;
-            object[] parameters = { size };
+            int king_x = 2, king_y = 2;
+            int knight_x = 4, knight_y = 3;
+            object[] parameters = { king_x, king_y, knight_x, knight_y };
 
-            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
-
-            float negProp = 0.0f;
-            foreach (int el in arr)
-            {
-                if (el < 0)
-                {
-                    negProp++;
-                }
-            }
-            negProp /= arr.Length;
+            bool res = (bool)this.testMethod.Invoke(null, parameters);
             
-            Assert.True(negProp > 0.6 && negProp < 0.7,
-                "Распределение отрицательных/положительных чисел не 1 к 2. А должно быть");
+            Assert.True(res, "Король (2;2), конь (4;3) - должен быть шах");
 
         }
 
         [Fact]
         public void Test2()
         {
-            int size = 1000;
-            object[] parameters = { size };
+            int king_x = 1, king_y = 3;
+            int knight_x = 3, knight_y = 7;
+            object[] parameters = { king_x, king_y, knight_x, knight_y };
 
-            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
+            bool res = (bool)this.testMethod.Invoke(null, parameters);
 
-            bool incorrectValue = false;
-            foreach (int el in arr)
-            {
-                if (el < -20 || el > 10)
-                {
-                    incorrectValue = true;
-                    break;
-                }
-            }
+            Assert.False(res, "Король (1;3), конь (3;7) - Никакого воздействия не должно быть");
 
-            Assert.False(incorrectValue,
-                "Как сюда попали эти левые числа вне допустимого диапазона???");
         }
 
         [Fact]
         public void Test3()
         {
-            int size = 10000;
-            object[] parameters = { size };
+            int king_x = -2, king_y = -4;
+            int knight_x = 3, knight_y = 7;
+            object[] parameters = { king_x, king_y, knight_x, knight_y };
 
-            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
+            bool res = (bool)this.testMethod.Invoke(null, parameters);
 
-            float posProp = 0.0f;
-            foreach (int el in arr)
-            {
-                if (el >= 0)
-                {
-                    posProp++;
-                }
-            }
-            posProp /= arr.Length;
-
-            Assert.True(posProp > 0.3 && posProp < 0.4,
-                "Распределение отрицательных/положительных чисел не 1 к 2. А должно быть");
+            Assert.False(res, "Короля на позицию -7:43, пожалуйста!");
 
         }
-
 
     }
 }

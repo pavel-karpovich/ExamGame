@@ -1,41 +1,72 @@
 using System;
+using System.IO;
 using Xunit;
 
 namespace Code.Tests
 {
+
     public class UnitTest1
     {
+
         [Fact]
         public void Test1()
         {
-            int[] arr = { 1, 2, 3, 4, 5, 6, 7 };
+            var output = new StringWriter();
+            Console.SetOut(output);
 
-            int sum = Code.Program.ArraySum(arr);
-            int realSum = 28;
+            var input = new StringReader("Носорог");
+            Console.SetIn(input);
 
-            Assert.True(sum == realSum, "Для массива { 1, 2, 3, 4, 5, 6, 7 } что-то пошло нет так!");
+            Code.Program.Main(null);
+
+            Assert.True(output.ToString() == string.Format("Пароль принят{0}", Environment.NewLine),
+                "Носорог. Я сказал \"Носорог\"... \"Носорог\"! Ау!!");
         }
 
         [Fact]
         public void Test2()
         {
-            int[] arr = { };
+            var output = new StringWriter();
+            Console.SetOut(output);
 
-            int sum = Code.Program.ArraySum(arr);
-            int realSum = 0;
+            var input = new StringReader("носорог");
+            Console.SetIn(input);
+            
+            Code.Program.Main(null);
 
-            Assert.True(sum == realSum, "Почему для пустого массива результат не 0?");
+            Assert.True(output.ToString() != string.Format("Пароль принят{0}", Environment.NewLine),
+                "носорог это не Носорог");
         }
 
         [Fact]
         public void Test3()
         {
-            int[] arr = { -3, 8, -3, -2, 1, -4, 3 };
+            var output = new StringWriter();
+            Console.SetOut(output);
 
-            int sum = Code.Program.ArraySum(arr);
-            int realSum = 0;
+            var input = new StringReader("Орангутан");
+            Console.SetIn(input);
+            
+            Code.Program.Main(null);
 
-            Assert.True(sum == realSum, "В чём проблема с массивом { -3, 8, -3, -2, 1, -4, 3 }?");
+            Assert.True(output.ToString() == string.Format("Держись отсюда подальше{0}", Environment.NewLine),
+                "Когда вы успели поменять пароль???");
+        }
+
+        [Fact]
+        public void Test4()
+        {
+            var output = new StringWriter();
+            Console.SetOut(output);
+
+            var input = new StringReader("Мезозой");
+            Console.SetIn(input);
+
+            Code.Program.Main(null);
+
+            Assert.True(output.ToString() == string.Format("Держись отсюда подальше{0}", Environment.NewLine) ||
+                output.ToString() == string.Format("Пароль принят{0}", Environment.NewLine),
+                "Может быть всего 2 варианта ответа! Почему на вывод идёт что-то третье?");
         }
 
     }

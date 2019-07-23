@@ -11,42 +11,33 @@ namespace Code.Tests
             int a = 40;
             int b = 30;
 
-            int max = Code.Program.Max(a, b);
+            double hyp = Math.Round((double)Code.Program.GetHypotenuse(a, b), 4);
+            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
 
-            Assert.True(max == a, "РќРµРїСЂР°РІРёР»СЊРЅРѕ СЂР°Р±РѕС‚Р°РµС‚ СЃ РїР°СЂР°РјРµС‚СЂР°РјРё " + a + " Рё " + b);
+            Assert.True(hyp == realhyp, "Для целых чисел, таких как " + a + " и " + b + ", что-то работает неверно");
         }
 
         [Fact]
         public void Test2()
         {
-            int a = 30;
-            int b = 40;
+            double a = 4.25;
+            double b = 3.7;
 
-            int max = Code.Program.Max(a, b);
+            double hyp = Math.Round((double)Code.Program.GetHypotenuse(a, b), 4);
+            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
 
-            Assert.True(max == b, "РќРµРїСЂР°РІРёР»СЊРЅРѕ СЂР°Р±РѕС‚Р°РµС‚ СЃ РїР°СЂР°РјРµС‚СЂР°РјРё " + a + " Рё " + b);
+            Assert.True(realhyp == hyp, "Неправильно работает с числами типа double " + a + " и " + b);
         }
 
         [Fact]
         public void Test3()
         {
-            int a = -3;
-            int b = -17;
+            float a = 0.12f;
+            float b = 3.94f;
 
-            int max = Code.Program.Max(a, b);
-
-            Assert.True(max == a, "РќРµРїСЂР°РІРёР»СЊРЅРѕ СЂР°Р±РѕС‚Р°РµС‚ СЃ РїР°СЂР°РјРµС‚СЂР°РјРё " + a + " Рё " + b);
-        }
-
-        [Fact]
-        public void Test4()
-        {
-            int a = 0;
-            int b = 0;
-
-            int max = Code.Program.Max(a, b);
-
-            Assert.True(max == a, "РќРµРїСЂР°РІРёР»СЊРЅРѕ СЂР°Р±РѕС‚Р°РµС‚ СЃ РїР°СЂР°РјРµС‚СЂР°РјРё " + a + " Рё " + b);
+            double hyp = Math.Round((float)Code.Program.GetHypotenuse(a, b), 4);
+            double realhyp = Math.Round(Math.Sqrt(a * a + b * b), 4);
+            Assert.True(realhyp == hyp, "А вот с этими float-ами что-то пошло не так: " + a + ", " + b);
         }
 
     }

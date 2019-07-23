@@ -1,20 +1,25 @@
 const { readFileAsync } = require("./utils");
 
+const tasksCount = 11;
+
 class Tasks {
 
     constructor() {
     }
 
     async getTask(pos) {
-        return await readFileAsync(__dirname + `/task/${pos}/definition.md`);
+        const taskNum = (pos - 1) % tasksCount;
+        return await readFileAsync(__dirname + `/task/${taskNum}/definition.md`);
     }
 
     async getDefaultCode(pos) {
-        return await readFileAsync(__dirname + `/task/${pos}/startup.cs`);
+        const taskNum = (pos - 1) % tasksCount;
+        return await readFileAsync(__dirname + `/task/${taskNum}/startup.cs`);
     }
 
     async getTests(pos) {
-        return await readFileAsync(__dirname + `/task/${pos}/tests.cs`);
+        const taskNum = (pos - 1) % tasksCount;
+        return await readFileAsync(__dirname + `/task/${taskNum}/tests.cs`);
     }
 }
 

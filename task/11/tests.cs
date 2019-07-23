@@ -8,22 +8,11 @@ namespace Code.Tests
     public class TestFixture1 : IDisposable
     {
 
-        public MethodInfo testMethod;
+        public Type testClass;
 
         public TestFixture1()
         {
-            MethodInfo[] methodInfos = typeof(Program).GetMethods(BindingFlags.Public | BindingFlags.Static);
-            foreach (var method in methodInfos)
-            {
-                var parameters = method.GetParameters();
-                if (parameters.Length == 4 && parameters[0].ParameterType == typeof(int) &&
-                    parameters[1].ParameterType == typeof(int) && parameters[2].ParameterType == typeof(int) &&
-                    parameters[3].ParameterType == typeof(int))
-                {
-                    this.testMethod = method;
-                    break;
-                }
-            }
+            this.testClass = typeof(Code.User);
         }
 
         public void Dispose()
@@ -33,51 +22,49 @@ namespace Code.Tests
 
     public class UnitTest1 : IClassFixture<TestFixture1>
     {
-        public MethodInfo testMethod;
+        public Type testClass;
 
         public UnitTest1(TestFixture1 fixture)
         {
-            this.testMethod = fixture.testMethod;
+            this.testClass = fixture.testClass;
         }
 
         [Fact]
         public void Test1()
         {
-            int king_x = 2, king_y = 2;
-            int knight_x = 4, knight_y = 3;
-            object[] parameters = { king_x, king_y, knight_x, knight_y };
 
-            bool res = (bool)this.testMethod.Invoke(null, parameters);
+            PropertyInfo[] properties = testClass.GetProperties();
             
-            Assert.True(res, "Король (2;2), конь (4;3) - должен быть шах");
+            Assert.True(properties.Length > 6, "Слишком мало свойств");
 
         }
 
         [Fact]
         public void Test2()
         {
-            int king_x = 1, king_y = 3;
-            int knight_x = 3, knight_y = 7;
-            object[] parameters = { king_x, king_y, knight_x, knight_y };
+            ConstructorInfo[] constructors = testClass.GetConstructors();
 
-            bool res = (bool)this.testMethod.Invoke(null, parameters);
-
-            Assert.False(res, "Король (1;3), конь (3;7) - Никакого воздействия не должно быть");
+            Assert.True(constructors.Length > 2, "Мало конструкторов!");
 
         }
 
         [Fact]
         public void Test3()
         {
-            int king_x = -2, king_y = -4;
-            int knight_x = 3, knight_y = 7;
-            object[] parameters = { king_x, king_y, knight_x, knight_y };
+            ConstructorInfo[] constructors = testClass.GetConstructors();
+            User user = null;
+            foreach (var constr in constructors)
+            {
+                if (constr.GetParameters().Length == 0)
+                {
+                    user = (User)constr.Invoke(new object[] { });
+                }
+            }
 
-            bool res = (bool)this.testMethod.Invoke(null, parameters);
-
-            Assert.False(res, "Короля на позицию -7:43, пожалуйста!");
+            Assert.True(user != null, "И куда это у нас подевался конструктор по умолчанию?");
 
         }
+
 
     }
 }

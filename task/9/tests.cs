@@ -16,7 +16,7 @@ namespace Code.Tests
             foreach (var method in methodInfos)
             {
                 var parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(float[]))
+                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(int))
                 {
                     this.testMethod = method;
                     break;
@@ -41,36 +41,69 @@ namespace Code.Tests
         [Fact]
         public void Test1()
         {
-            float[] val = { 2.4f, 1.46f, 2.834f, 12.63f, 4.4f, 65.233f };
-            object[] parameters = { val };
+            int size = 10000;
+            object[] parameters = { size };
 
-            float avg = (float)Math.Round((float)this.testMethod.Invoke(null, parameters));
-            float desired = (float)Math.Round(14.8261671);
+            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
 
-            Assert.True(avg == desired, "Среднее значение считается как-то очень странно...");
+            float negProp = 0.0f;
+            foreach (int el in arr)
+            {
+                if (el < 0)
+                {
+                    negProp++;
+                }
+            }
+            negProp /= arr.Length;
+            
+            Assert.True(negProp > 0.6 && negProp < 0.7,
+                "Распределение отрицательных/положительных чисел не 1 к 2. А должно быть");
+
         }
 
         [Fact]
         public void Test2()
         {
-            float[] val = {  };
-            object[] parameters = { val };
+            int size = 1000;
+            object[] parameters = { size };
 
-            float avg = (float)Math.Round((float)this.testMethod.Invoke(null, parameters));
+            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
 
-            Assert.True(float.IsNaN(avg), "Пустой массив - что, не массив?");
+            bool incorrectValue = false;
+            foreach (int el in arr)
+            {
+                if (el < -20 || el > 10)
+                {
+                    incorrectValue = true;
+                    break;
+                }
+            }
+
+            Assert.False(incorrectValue,
+                "Как сюда попали эти левые числа вне допустимого диапазона???");
         }
 
         [Fact]
         public void Test3()
         {
-            float[] val = { -3.13f, -0.34f, 38f, 1.43f, -44.2f, -37.48f };
-            object[] parameters = { val };
+            int size = 10000;
+            object[] parameters = { size };
 
-            float avg = (float)Math.Round((float)this.testMethod.Invoke(null, parameters));
-            float desired = (float)Math.Round(-8.0f);
+            int[] arr = (int[])this.testMethod.Invoke(null, parameters);
 
-            Assert.True(avg == desired, "Массив с отрицательными значениями не хочет дружить с вашим алгоритмом");
+            float posProp = 0.0f;
+            foreach (int el in arr)
+            {
+                if (el >= 0)
+                {
+                    posProp++;
+                }
+            }
+            posProp /= arr.Length;
+
+            Assert.True(posProp > 0.3 && posProp < 0.4,
+                "Распределение отрицательных/положительных чисел не 1 к 2. А должно быть");
+
         }
 
 

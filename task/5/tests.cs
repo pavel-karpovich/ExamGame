@@ -8,65 +8,83 @@ namespace Code.Tests
     public class UnitTest1
     {
 
+        private static bool CompareArrByValue(int[] a1, int[] a2)
+        {
+            if (a1.Length != a2.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < a1.Length; i++)
+            {
+                if (a1[i] != a2[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         [Fact]
         public void Test1()
         {
-            var output = new StringWriter();
-            Console.SetOut(output);
+            int[] arr = { 2, 5, 8, 2, 93, 13, 5, 4 };
+            int lower = 5;
 
-            var input = new StringReader("Носорог");
-            Console.SetIn(input);
+            int[] res = Code.Program.ArrayFilterLower(arr, lower);
+            int[] target = { 2, 2, 4 };
 
-            Code.Program.Main(null);
-
-            Assert.True(output.ToString() == string.Format("Пароль принят{0}", Environment.NewLine),
-                "Носорог. Я сказал \"Носорог\"... \"Носорог\"! Ау!!");
+            Assert.True(CompareArrByValue(res, target), "Даже с таким массивом что-то не работает: { " +
+                string.Join(", ", arr) + " } и число " + lower);
         }
 
         [Fact]
         public void Test2()
         {
-            var output = new StringWriter();
-            Console.SetOut(output);
+            int[] arr = { 5, -13, -6, 23, -19, 9, -4, 0, -94, -72, 18 };
+            int lower = -5;
 
-            var input = new StringReader("носорог");
-            Console.SetIn(input);
-            
-            Code.Program.Main(null);
+            int[] res = Code.Program.ArrayFilterLower(arr, lower);
+            int[] target = { -13, -6, -19, -94, -72 };
 
-            Assert.True(output.ToString() != string.Format("Пароль принят{0}", Environment.NewLine),
-                "носорог это не Носорог");
+            Assert.True(CompareArrByValue(res, target), "Отрицательные не проходят: { " +
+                string.Join(", ", arr) + " } (вместе с " + lower +"), проверь всё ещё раз");
         }
 
         [Fact]
         public void Test3()
         {
-            var output = new StringWriter();
-            Console.SetOut(output);
+            int[] arr = { 10, 128, -954, 23, -453, -54, 12, 84, 290 };
+            int lower = 50000;
 
-            var input = new StringReader("Орангутан");
-            Console.SetIn(input);
-            
-            Code.Program.Main(null);
+            int[] res = Code.Program.ArrayFilterLower(arr, lower);
+            int[] target = { 10, 128, -954, 23, -453, -54, 12, 84, 290 };
 
-            Assert.True(output.ToString() == string.Format("Держись отсюда подальше{0}", Environment.NewLine),
-                "Когда вы успели поменять пароль???");
+            Assert.True(CompareArrByValue(res, target), "С большими числами беда: { " +
+                string.Join(", ", arr) + " } (с числом " + lower + ")");
         }
 
         [Fact]
         public void Test4()
         {
-            var output = new StringWriter();
-            Console.SetOut(output);
+            int[] arr = { };
+            int lower = 50;
 
-            var input = new StringReader("Мезозой");
-            Console.SetIn(input);
+            int[] res = Code.Program.ArrayFilterLower(arr, lower);
+            int[] target = { };
 
-            Code.Program.Main(null);
+            Assert.True(CompareArrByValue(res, target), "Пустой массив приводит к неприятностями...");
+        }
 
-            Assert.True(output.ToString() == string.Format("Держись отсюда подальше{0}", Environment.NewLine) ||
-                output.ToString() == string.Format("Пароль принят{0}", Environment.NewLine),
-                "Может быть всего 2 варианта ответа! Почему на вывод идёт что-то третье?");
+        [Fact]
+        public void Test5()
+        {
+            int[] arr = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            int lower = 0;
+
+            int[] res = Code.Program.ArrayFilterLower(arr, lower);
+            int[] target = { };
+
+            Assert.True(CompareArrByValue(res, target), "Ноль-ноль-ноль-ноль-ноль-ноль......");
         }
 
     }
